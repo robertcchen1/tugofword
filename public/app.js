@@ -10,18 +10,37 @@ const SEEN_KEY        = "tugofword:seenPairs";
 const TOTAL_PAIRS     = 100;
 
 function apiBase() {
-  return localStorage.getItem(API_KEY_STORAGE) || ""; // empty = same origin
+  const saved = localStorage.getItem(API_KEY_STORAGE);
+  if (saved) return saved;
+  // Dev convenience: if served on a localhost port that isn't the Worker's,
+  // default to the standard wrangler dev port. Avoids the "404 on /api/..."
+  // gotcha where the static-file server is on :3000 and the Worker on :8787.
+  const { hostname, port } = location;
+  const isLocal = hostname === "localhost" || hostname === "127.0.0.1";
+  if (isLocal && port !== "8787") return "http://127.0.0.1:8787";
+  return ""; // same origin
 }
 
 async function api(path, body) {
-  const r = await fetch(apiBase() + path, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body || {})
-  });
+  const base = apiBase();
+  let r;
+  try {
+    r = await fetch(base + path, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body || {})
+    });
+  } catch (e) {
+    throw new Error(`Cannot reach API at ${base || location.origin}. Is the Worker running? (Settings → API endpoint)`);
+  }
   let data;
   try { data = await r.json(); }
-  catch { throw new Error(`Bad response (${r.status})`); }
+  catch {
+    if (r.status === 404) {
+      throw new Error(`404 from ${base || location.origin}${path}. The frontend is talking to the wrong server — set API endpoint in Settings.`);
+    }
+    throw new Error(`Bad response (${r.status})`);
+  }
   if (!r.ok) throw new Error(data.error || `Request failed (${r.status})`);
   return data;
 }
