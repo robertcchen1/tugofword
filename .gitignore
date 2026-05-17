@@ -5,6 +5,8 @@ npm-debug.log*
 # Environment
 .env
 .env.local
+.dev.vars
+worker/.dev.vars
 
 # OS
 .DS_Store

@@ -38,33 +38,44 @@ worker/         ← Cloudflare Worker (deploy to workers.dev)
 ### Why this stack?
 
 - **Vanilla HTML/CSS/JS** — matches the other games in this workspace; no build step.
-- **Cloudflare Workers AI** — both the embedding model (BAAI/bge-base-en-v1.5) and the LLM (Gemma 3) are native bindings. No external API keys.
+- **Cloudflare Worker** as the API host — free, fast cold starts, deploys in seconds.
+- **Google AI Studio** for both the embedding model (`text-embedding-004`) and the AI opponent LLM (`gemini-2.0-flash`). Free tier covers ~1,500 requests/day for each — plenty for casual play. (We previously used Cloudflare Workers AI but its 10k-neurons/day free limit was tight.)
 - **Stateless Worker** — game state is held client-side and sent with each request. Trivially horizontal-scaling.
 - **Multiplayer-ready** — the only place "opponent's word" comes from is `POST /api/ai-move`. Swapping that for a Durable-Object-backed WebSocket room is an additive change.
 
 ## Development
 
-You'll need [Node.js](https://nodejs.org/) and a [Cloudflare account](https://dash.cloudflare.com/sign-up) (the free plan is enough).
+You'll need:
+- [Node.js](https://nodejs.org/)
+- A [Cloudflare account](https://dash.cloudflare.com/sign-up) (free plan)
+- A [Google AI Studio API key](https://aistudio.google.com/apikey) (free)
 
 ```bash
 # Install wrangler
 npm install
 
-# Authenticate (one-time)
+# Authenticate with Cloudflare (one-time)
 npx wrangler login
+
+# Put your Google AI key in a local .dev.vars file (NOT committed)
+echo "GOOGLE_AI_KEY=YOUR_KEY_HERE" > worker/.dev.vars
 
 # Run the Worker locally (http://localhost:8787)
 npm run dev
 
-# Serve the frontend locally (http://localhost:3000)
+# In a second terminal, serve the frontend locally (http://localhost:3000)
 npm run serve:web
 
-# In the Settings tab, set "API endpoint" to http://localhost:8787
+# Open http://localhost:3000 — the frontend auto-targets the Worker at :8787.
 ```
 
 ## Deploy
 
 ```bash
+# Upload your Google AI key as a Worker secret (one-time)
+npx wrangler secret put GOOGLE_AI_KEY --config worker/wrangler.toml
+# (paste your key when prompted)
+
 # Deploy the Worker
 npm run deploy:worker
 
@@ -72,7 +83,7 @@ npm run deploy:worker
 npm run deploy:pages
 ```
 
-After both deploy, set the frontend's API endpoint to your Worker's URL (e.g. `https://tugofword-api.<your-subdomain>.workers.dev`) — or put them on the same domain via a route.
+After both deploy, set the frontend's API endpoint (in the Settings tab) to your Worker's URL (e.g. `https://tugofword-api.<your-subdomain>.workers.dev`) — or put them on the same domain via a Pages function route.
 
 ## API
 

@@ -1,13 +1,40 @@
-// AI opponent move generator (Gemma 3 via Workers AI).
+// AI opponent move generator (Google Gemini 2.0 Flash via AI Studio).
 //
-// Strategy: prompt Gemma with the game state and constraints, parse a single
+// Strategy: prompt Gemini with the game state and constraints, parse a single
 // word out of the response, validate it (real word + stem not in playedStems),
-// retry up to 3 times. Falls back to a safe word if all retries fail.
+// retry up to 5 times. Falls back to a curated per-target word list if all
+// retries fail.
+//
+// Requires GOOGLE_AI_KEY as a Worker secret.
 
 import { stem } from "./stemmer.js";
 import { isRealWord } from "./dictionary.js";
 
-const LLM_MODEL = "@cf/google/gemma-3-12b-it";
+const LLM_MODEL = "gemini-2.0-flash";
+const LLM_URL = `https://generativelanguage.googleapis.com/v1beta/models/${LLM_MODEL}:generateContent`;
+
+async function callGemini(env, systemPrompt, userMessage, temperature) {
+  const apiKey = env.GOOGLE_AI_KEY;
+  if (!apiKey) throw new Error("GOOGLE_AI_KEY not configured");
+
+  const res = await fetch(`${LLM_URL}?key=${apiKey}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      systemInstruction: { parts: [{ text: systemPrompt }] },
+      contents: [{ role: "user", parts: [{ text: userMessage }] }],
+      generationConfig: { temperature, maxOutputTokens: 64, responseMimeType: "text/plain" }
+    })
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`Gemini API ${res.status}: ${errText.slice(0, 300)}`);
+  }
+
+  const data = await res.json();
+  return data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+}
 
 const SYSTEM_PROMPT_TEMPLATE = ({ aiTarget, playerTarget, ropePos, threshold, round, playedStems }) => `
 You are an AI opponent in "Tug of Word," a competitive semantic word game.
@@ -139,25 +166,17 @@ export async function generateAiMove(gameState, env) {
 
   for (let attempt = 0; attempt < 5; attempt++) {
     try {
-      const res = await env.AI.run(LLM_MODEL, {
-        messages: [
-          { role: "system", content: prompt },
-          { role: "user", content: attempt === 0
-              ? "What word do you play this turn?"
-              : `Your previous answer was rejected (either a forbidden stem or not a real word). Try a different word — think of an adjacent concept related to "${aiTarget}" that hasn't been used yet.` }
-        ],
-        max_tokens: 32,
-        temperature: 0.5 + attempt * 0.15 // bump temp gradually on retry
-      });
-      const raw = res.response || res.result || "";
+      const userMsg = attempt === 0
+        ? "What word do you play this turn?"
+        : `Your previous answer was rejected (either a forbidden stem or not a real word). Try a different word — think of an adjacent concept related to "${aiTarget}" that hasn't been used yet.`;
+      const raw = await callGemini(env, prompt, userMsg, 0.5 + attempt * 0.15);
       const word = extractWord(raw);
       if (!word) continue;
       if (playedStems.includes(stem(word))) continue;
       if (!(await isRealWord(word))) continue;
       return word;
     } catch (err) {
-      // Model error — try again or fall back
-      console.error("Gemma error:", err);
+      console.error("Gemini error (attempt " + attempt + "):", err.message);
     }
   }
 

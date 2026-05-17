@@ -1,10 +1,14 @@
-// Semantic-differential scoring via Cloudflare Workers AI embeddings.
+// Semantic-differential scoring via Google AI text-embedding-004.
 //
 // scorePull(input, playerTarget, aiTarget, env) -> number in roughly [-1, +1]
 //   positive => pulls rope toward player
 //   negative => pulls rope toward AI
+//
+// Uses Google's batchEmbedContents endpoint for a single round-trip per turn.
+// Requires GOOGLE_AI_KEY as a Worker secret (or in worker/.dev.vars for local).
 
-const EMBED_MODEL = "@cf/baai/bge-base-en-v1.5";
+const EMBED_MODEL = "text-embedding-004";
+const EMBED_URL = `https://generativelanguage.googleapis.com/v1beta/models/${EMBED_MODEL}:batchEmbedContents`;
 
 function cosineSim(a, b) {
   let dot = 0, na = 0, nb = 0;
@@ -18,9 +22,38 @@ function cosineSim(a, b) {
 }
 
 export async function embed(env, texts) {
-  const res = await env.AI.run(EMBED_MODEL, { text: texts });
-  // Workers AI returns { shape: [...], data: [[...], [...], ...] }
-  return res.data;
+  const apiKey = env.GOOGLE_AI_KEY;
+  if (!apiKey) {
+    throw new Error(
+      "GOOGLE_AI_KEY is not configured. " +
+      "For local dev: create worker/.dev.vars with GOOGLE_AI_KEY=... " +
+      "For prod: run `npx wrangler secret put GOOGLE_AI_KEY`."
+    );
+  }
+
+  const body = {
+    requests: texts.map(text => ({
+      model: `models/${EMBED_MODEL}`,
+      content: { parts: [{ text }] }
+    }))
+  };
+
+  const res = await fetch(`${EMBED_URL}?key=${apiKey}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`Google embed API ${res.status}: ${errText.slice(0, 300)}`);
+  }
+
+  const data = await res.json();
+  if (!data.embeddings || !Array.isArray(data.embeddings)) {
+    throw new Error(`Unexpected Google embed response: ${JSON.stringify(data).slice(0, 300)}`);
+  }
+  return data.embeddings.map(e => e.values);
 }
 
 export async function scorePull(input, playerTarget, aiTarget, env) {
