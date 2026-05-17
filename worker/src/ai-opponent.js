@@ -37,25 +37,88 @@ STRATEGY:
 - Pick a word strongly associated with YOUR_TARGET but weakly associated with OPPONENT_TARGET.
 - Avoid words whose stem appears in FORBIDDEN STEMS.
 - In sudden death (round > 5), prefer high-conviction picks even if obvious.
+- After many rounds the obvious words may be banned. Reach for adjacent
+  concepts: properties of YOUR_TARGET (colors, textures, sounds, materials),
+  things found IN/AT YOUR_TARGET, scientific or poetic synonyms, or
+  characteristic actions associated with YOUR_TARGET. Single common nouns
+  or adjectives only.
 `;
 
-// Last-resort fallback words per target (broad nouns very close to common targets).
-// Used only if 3 Gemma retries all fail validation.
+// Per-target fallback word lists. Each entry is 8-12 semantically-close
+// nouns/adjectives picked so most rounds of a game can be played from this
+// list alone if the LLM fails. Words are chosen with diverse stems so several
+// can be exhausted before the AI is forced into generic territory.
 const FALLBACKS = {
-  ocean: "wave", space: "comet", forest: "pine", desert: "dune",
-  mountain: "peak", valley: "hollow", river: "stream", canyon: "gorge",
-  volcano: "ash", glacier: "frost", sun: "ray", moon: "crescent",
-  dawn: "sunrise", dusk: "twilight", fire: "flame", water: "rain",
-  earth: "soil", air: "breeze", ice: "frost", steam: "vapor"
+  // Nature & landscape
+  ocean:   ["wave", "tide", "current", "reef", "lagoon", "deep", "shore", "salt", "marine", "kelp"],
+  space:   ["comet", "galaxy", "orbit", "nebula", "void", "cosmos", "rocket", "asteroid", "stellar", "vacuum"],
+  forest:  ["pine", "oak", "moss", "wolf", "owl", "fern", "grove", "thicket", "wildlife", "canopy"],
+  desert:  ["dune", "cactus", "scorpion", "mirage", "oasis", "drought", "barren", "sandstorm", "camel", "arid"],
+  mountain:["peak", "summit", "cliff", "boulder", "ridge", "alpine", "climb", "snowy", "rugged", "elevation"],
+  valley:  ["meadow", "hollow", "creek", "pasture", "vineyard", "lowland", "village", "brook", "gentle", "fertile"],
+  river:   ["stream", "current", "fish", "delta", "rapid", "bank", "trout", "ferry", "flowing", "estuary"],
+  canyon:  ["gorge", "chasm", "ravine", "cliff", "crevice", "abyss", "echo", "carved", "vast", "rocky"],
+  volcano: ["ash", "magma", "eruption", "crater", "molten", "smoke", "caldera", "sulfur", "explosive", "fiery"],
+  glacier: ["frost", "iceberg", "polar", "freeze", "arctic", "crevasse", "sheet", "calving", "frigid", "blue"],
+  jungle:  ["vine", "parrot", "humid", "monkey", "fern", "canopy", "wild", "thick", "tropical", "tiger"],
+  tundra:  ["frozen", "barren", "moss", "caribou", "wind", "polar", "permafrost", "lichen", "bleak", "icy"],
+  meadow:  ["wildflower", "grass", "butterfly", "lush", "pasture", "bee", "clover", "open", "gentle", "fawn"],
+  swamp:   ["bog", "alligator", "murky", "marsh", "moss", "frog", "humid", "stagnant", "willow", "mosquito"],
+  // Sky & cosmos
+  sun:     ["ray", "warmth", "noon", "yellow", "glare", "solar", "shine", "blaze", "daylight", "scorch"],
+  moon:    ["crescent", "lunar", "silver", "tide", "phase", "halo", "midnight", "shadow", "orbit", "pale"],
+  dawn:    ["sunrise", "early", "morning", "rooster", "dew", "rosy", "horizon", "awakening", "fresh", "amber"],
+  dusk:    ["sunset", "evening", "owl", "purple", "shadow", "lantern", "golden", "fading", "horizon", "calm"],
+  comet:   ["tail", "icy", "orbit", "streak", "blaze", "shooting", "rare", "frozen", "celestial", "elliptical"],
+  planet:  ["orbit", "rocky", "gravity", "ring", "moon", "sphere", "satellite", "celestial", "rotation", "alien"],
+  star:    ["twinkle", "bright", "distant", "nova", "shine", "celestial", "supernova", "constellation", "burning", "remote"],
+  cloud:   ["fluffy", "mist", "fog", "rainstorm", "wisp", "overcast", "drizzle", "puffy", "shadow", "thunderhead"],
+  // Elements
+  fire:    ["flame", "ember", "blaze", "smoke", "ash", "torch", "burning", "spark", "hearth", "inferno"],
+  water:   ["rain", "drop", "stream", "splash", "wet", "wave", "puddle", "liquid", "swim", "thirst"],
+  earth:   ["soil", "dirt", "ground", "clay", "rock", "field", "garden", "loam", "worm", "harvest"],
+  air:     ["breeze", "wind", "breath", "sky", "drift", "gust", "kite", "balloon", "flying", "fresh"],
+  ice:     ["frost", "freeze", "cold", "crystal", "snowflake", "icicle", "glacier", "winter", "slippery", "frigid"],
+  steam:   ["vapor", "boil", "kettle", "fog", "humidity", "hot", "engine", "sauna", "puff", "evaporate"],
+  // Animals
+  wolf:    ["howl", "pack", "fang", "prowl", "forest", "alpha", "shadow", "moon", "hunt", "den"],
+  whale:   ["pod", "blue", "fluke", "blow", "deep", "krill", "harpoon", "sonar", "majestic", "song"],
+  eagle:   ["talon", "soar", "feather", "beak", "nest", "mountain", "majestic", "swoop", "freedom", "predator"],
+  snake:   ["slither", "scale", "venom", "coil", "hiss", "serpent", "fang", "rattle", "shed", "viper"],
+  tiger:   ["stripe", "prowl", "jungle", "fang", "orange", "fierce", "hunter", "cub", "roar", "stealth"],
+  dolphin: ["pod", "leap", "intelligent", "blowhole", "playful", "marine", "echolocation", "fin", "swift", "friendly"],
+  lion:    ["mane", "pride", "roar", "savanna", "fierce", "king", "cub", "hunter", "golden", "majestic"],
+  shark:   ["fin", "predator", "jaw", "tooth", "deep", "hunter", "great", "fearsome", "swim", "tail"],
+  // Time & seasons
+  spring:  ["bloom", "tulip", "rain", "fresh", "renewal", "pollen", "warmth", "thaw", "rebirth", "lamb"],
+  autumn:  ["leaf", "harvest", "amber", "crisp", "pumpkin", "rake", "frost", "orange", "shorter", "migration"],
+  summer:  ["sun", "vacation", "beach", "warm", "ice cream", "swim", "longer", "barbecue", "shorts", "humid"],
+  winter:  ["snow", "frost", "cold", "sweater", "hibernate", "icicle", "bare", "shiver", "fireplace", "blizzard"],
+  // Emotions
+  joy:     ["laughter", "smile", "delight", "celebration", "bliss", "happy", "cheer", "elation", "warmth", "gratitude"],
+  sorrow:  ["tear", "grief", "ache", "mourn", "loss", "weep", "blue", "heavy", "lonely", "regret"],
+  anger:   ["rage", "fury", "shout", "burn", "fist", "wrath", "scowl", "boil", "heated", "outburst"],
+  calm:    ["serene", "peaceful", "tranquil", "still", "gentle", "meditate", "quiet", "soothing", "restful", "balance"],
+  // Architecture
+  castle:  ["tower", "moat", "knight", "throne", "fortress", "drawbridge", "royal", "medieval", "rampart", "stone"],
+  cottage: ["cozy", "thatched", "rustic", "garden", "chimney", "humble", "quaint", "rural", "fireplace", "ivy"],
+  // Food
+  bread:   ["loaf", "crumb", "yeast", "bakery", "wheat", "toast", "crust", "sandwich", "warm", "knead"],
+  sushi:   ["roll", "rice", "wasabi", "japanese", "raw", "salmon", "soy", "chopstick", "nori", "sashimi"],
+  coffee:  ["espresso", "bean", "brew", "mug", "morning", "caffeine", "roast", "latte", "bitter", "aroma"],
+  tea:     ["leaf", "kettle", "herbal", "chamomile", "afternoon", "steep", "porcelain", "cozy", "soothing", "green"]
 };
 
 function pickFallback(target, forbiddenStems) {
-  const candidate = FALLBACKS[target.toLowerCase()];
-  if (candidate && !forbiddenStems.includes(stem(candidate))) return candidate;
-  // Last resort — a generic word
-  const generic = ["thing", "place", "kind", "form", "shape"];
+  const list = FALLBACKS[target.toLowerCase()] || [];
+  for (const w of list) {
+    if (!forbiddenStems.includes(stem(w))) return w;
+  }
+  // Last resort — generic broad words. These are weak (low pull) so we
+  // really do try the per-target list first.
+  const generic = ["thing", "place", "kind", "form", "shape", "matter", "object", "nature"];
   for (const w of generic) if (!forbiddenStems.includes(stem(w))) return w;
-  return "object";
+  return "stuff";
 }
 
 function extractWord(raw) {
@@ -74,15 +137,17 @@ export async function generateAiMove(gameState, env) {
     aiTarget, playerTarget, ropePos, threshold, round, playedStems
   });
 
-  for (let attempt = 0; attempt < 3; attempt++) {
+  for (let attempt = 0; attempt < 5; attempt++) {
     try {
       const res = await env.AI.run(LLM_MODEL, {
         messages: [
           { role: "system", content: prompt },
-          { role: "user", content: "What word do you play this turn?" }
+          { role: "user", content: attempt === 0
+              ? "What word do you play this turn?"
+              : `Your previous answer was rejected (either a forbidden stem or not a real word). Try a different word — think of an adjacent concept related to "${aiTarget}" that hasn't been used yet.` }
         ],
         max_tokens: 32,
-        temperature: 0.6 + attempt * 0.2 // bump temp on retry
+        temperature: 0.5 + attempt * 0.15 // bump temp gradually on retry
       });
       const raw = res.response || res.result || "";
       const word = extractWord(raw);

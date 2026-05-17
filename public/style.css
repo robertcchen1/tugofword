@@ -192,9 +192,14 @@ main { padding: 14px 12px env(safe-area-inset-bottom); }
 
 /* Cat positioning: outer .cat-pos has SVG transform attribute (viewBox units,
    set by JS); inner .cat-wrap has CSS animations only. No coordinate-system
-   confusion between the two. */
+   confusion between the two.
+   transform-box: fill-box is essential on BOTH — without it CSS rotates
+   around the SVG viewport (0,0), swinging the cat off-screen instead of
+   tumbling in place. */
 .cat-pos {
   transition: transform 700ms cubic-bezier(.34,1.2,.64,1);
+  transform-origin: center;
+  transform-box: fill-box;
 }
 .cat-wrap {
   transform-origin: center;
