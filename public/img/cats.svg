@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+  <!-- ===========================================================
+       Cat SVG sprite sheet
+       Each symbol uses a 120×160 viewBox. Both cats face inward
+       toward the rope (black cat faces right, orange cat faces left).
+       =========================================================== -->
+
+  <!-- ============ BLACK CAT (idle / tugging) ============ -->
+  <symbol id="cat-black" viewBox="0 0 120 160">
+    <!-- Tail (curls behind) -->
+    <path d="M 30 100 Q 5 90 8 60 Q 12 35 30 40"
+          fill="none" stroke="#1a1a1a" stroke-width="9" stroke-linecap="round"/>
+    <!-- Body (chubby ellipse) -->
+    <ellipse cx="60" cy="100" rx="34" ry="38" fill="#1a1a1a"/>
+    <!-- Back legs -->
+    <ellipse cx="42" cy="138" rx="10" ry="14" fill="#1a1a1a"/>
+    <ellipse cx="78" cy="138" rx="10" ry="14" fill="#1a1a1a"/>
+    <!-- Front paws on rope (right side, gripping) -->
+    <ellipse cx="90" cy="92" rx="9" ry="11" fill="#1a1a1a" transform="rotate(-25 90 92)"/>
+    <ellipse cx="92" cy="105" rx="9" ry="11" fill="#1a1a1a" transform="rotate(-15 92 105)"/>
+    <!-- Head -->
+    <circle cx="58" cy="56" r="30" fill="#1a1a1a"/>
+    <!-- Ears -->
+    <path d="M 36 38 L 28 18 L 48 30 Z" fill="#1a1a1a"/>
+    <path d="M 80 38 L 88 18 L 68 30 Z" fill="#1a1a1a"/>
+    <path d="M 39 34 L 36 24 L 45 30 Z" fill="#ff9aa2" opacity="0.7"/>
+    <path d="M 77 34 L 80 24 L 71 30 Z" fill="#ff9aa2" opacity="0.7"/>
+    <!-- Eyes (yellow, narrowed in concentration) -->
+    <ellipse cx="48" cy="54" rx="5" ry="6" fill="#f5d020"/>
+    <ellipse cx="68" cy="54" rx="5" ry="6" fill="#f5d020"/>
+    <ellipse cx="48" cy="55" rx="1.8" ry="4" fill="#1a1a1a"/>
+    <ellipse cx="68" cy="55" rx="1.8" ry="4" fill="#1a1a1a"/>
+    <!-- Nose -->
+    <path d="M 56 64 L 60 68 L 64 64 Z" fill="#ff9aa2"/>
+    <!-- Mouth (determined) -->
+    <path d="M 60 68 Q 55 73 51 71" fill="none" stroke="#0a0a0a" stroke-width="1.5" stroke-linecap="round"/>
+    <path d="M 60 68 Q 65 73 69 71" fill="none" stroke="#0a0a0a" stroke-width="1.5" stroke-linecap="round"/>
+    <!-- Whiskers -->
+    <line x1="40" y1="66" x2="22" y2="62" stroke="#666" stroke-width="0.8"/>
+    <line x1="40" y1="70" x2="22" y2="72" stroke="#666" stroke-width="0.8"/>
+    <line x1="76" y1="66" x2="94" y2="62" stroke="#666" stroke-width="0.8"/>
+    <line x1="76" y1="70" x2="94" y2="72" stroke="#666" stroke-width="0.8"/>
+  </symbol>
+
+  <!-- ============ ORANGE TABBY CAT (idle / tugging) ============ -->
+  <symbol id="cat-orange" viewBox="0 0 120 160">
+    <!-- Mirror: faces left, paws on left side. Container flips children. -->
+    <g transform="translate(120 0) scale(-1 1)">
+      <!-- Tail -->
+      <path d="M 30 100 Q 5 90 8 60 Q 12 35 30 40"
+            fill="none" stroke="#e8772e" stroke-width="9" stroke-linecap="round"/>
+      <!-- Body -->
+      <ellipse cx="60" cy="100" rx="34" ry="38" fill="#e8772e"/>
+      <!-- Stripes on body -->
+      <ellipse cx="50" cy="85" rx="20" ry="3" fill="#b85a1a" opacity="0.6"/>
+      <ellipse cx="55" cy="100" rx="22" ry="3" fill="#b85a1a" opacity="0.6"/>
+      <ellipse cx="55" cy="115" rx="20" ry="3" fill="#b85a1a" opacity="0.6"/>
+      <ellipse cx="55" cy="128" rx="16" ry="3" fill="#b85a1a" opacity="0.6"/>
+      <!-- Tail stripes -->
+      <ellipse cx="14" cy="55" rx="3" ry="6" fill="#b85a1a" opacity="0.7"/>
+      <ellipse cx="10" cy="75" rx="3" ry="6" fill="#b85a1a" opacity="0.7"/>
+      <!-- Back legs -->
+      <ellipse cx="42" cy="138" rx="10" ry="14" fill="#e8772e"/>
+      <ellipse cx="78" cy="138" rx="10" ry="14" fill="#e8772e"/>
+      <!-- Front paws on rope -->
+      <ellipse cx="90" cy="92" rx="9" ry="11" fill="#e8772e" transform="rotate(-25 90 92)"/>
+      <ellipse cx="92" cy="105" rx="9" ry="11" fill="#e8772e" transform="rotate(-15 92 105)"/>
+      <!-- Head -->
+      <circle cx="58" cy="56" r="30" fill="#e8772e"/>
+      <!-- Head stripes (forehead M-shape) -->
+      <path d="M 45 38 L 50 48 L 55 38 L 60 48 L 65 38 L 70 48 L 75 38"
+            fill="none" stroke="#b85a1a" stroke-width="2" opacity="0.7"/>
+      <!-- Cheek stripes -->
+      <line x1="35" y1="60" x2="42" y2="62" stroke="#b85a1a" stroke-width="2" opacity="0.6"/>
+      <line x1="35" y1="68" x2="42" y2="68" stroke="#b85a1a" stroke-width="2" opacity="0.6"/>
+      <line x1="78" y1="60" x2="85" y2="62" stroke="#b85a1a" stroke-width="2" opacity="0.6"/>
+      <line x1="78" y1="68" x2="85" y2="68" stroke="#b85a1a" stroke-width="2" opacity="0.6"/>
+      <!-- Ears -->
+      <path d="M 36 38 L 28 18 L 48 30 Z" fill="#e8772e"/>
+      <path d="M 80 38 L 88 18 L 68 30 Z" fill="#e8772e"/>
+      <path d="M 39 34 L 36 24 L 45 30 Z" fill="#ff9aa2" opacity="0.85"/>
+      <path d="M 77 34 L 80 24 L 71 30 Z" fill="#ff9aa2" opacity="0.85"/>
+      <!-- Eyes (green) -->
+      <ellipse cx="48" cy="54" rx="5" ry="6" fill="#5fb04f"/>
+      <ellipse cx="68" cy="54" rx="5" ry="6" fill="#5fb04f"/>
+      <ellipse cx="48" cy="55" rx="1.8" ry="4" fill="#0a0a0a"/>
+      <ellipse cx="68" cy="55" rx="1.8" ry="4" fill="#0a0a0a"/>
+      <!-- Nose -->
+      <path d="M 56 64 L 60 68 L 64 64 Z" fill="#ff9aa2"/>
+      <!-- Smug mouth -->
+      <path d="M 60 68 Q 55 73 51 71" fill="none" stroke="#5a2a05" stroke-width="1.5" stroke-linecap="round"/>
+      <path d="M 60 68 Q 65 73 69 71" fill="none" stroke="#5a2a05" stroke-width="1.5" stroke-linecap="round"/>
+      <!-- Whiskers -->
+      <line x1="40" y1="66" x2="22" y2="62" stroke="#fff" stroke-width="0.8" opacity="0.7"/>
+      <line x1="40" y1="70" x2="22" y2="72" stroke="#fff" stroke-width="0.8" opacity="0.7"/>
+      <line x1="76" y1="66" x2="94" y2="62" stroke="#fff" stroke-width="0.8" opacity="0.7"/>
+      <line x1="76" y1="70" x2="94" y2="72" stroke="#fff" stroke-width="0.8" opacity="0.7"/>
+    </g>
+  </symbol>
+</svg>

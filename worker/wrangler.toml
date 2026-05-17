@@ -1,0 +1,15 @@
+name = "tugofword-api"
+main = "src/index.js"
+compatibility_date = "2026-05-17"
+
+[ai]
+binding = "AI"
+
+# Future multiplayer support (uncomment when adding 2-player rooms):
+# [[durable_objects.bindings]]
+# name = "GAME_ROOM"
+# class_name = "GameRoom"
+#
+# [[migrations]]
+# tag = "v1"
+# new_classes = ["GameRoom"]

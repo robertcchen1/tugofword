@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#fceabb" />
+  <title>Tug of Word</title>
+  <link rel="icon" type="image/svg+xml" href="img/favicon.svg" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Outer tabs (outside the inner game container) -->
+  <nav class="tabs" aria-label="Sections">
+    <button class="tab-btn active" data-tab="game">Game</button>
+    <button class="tab-btn" data-tab="how">How to Play</button>
+    <button class="tab-btn" data-tab="settings">Settings</button>
+  </nav>
+
+  <main>
+    <!-- ============ GAME TAB ============ -->
+    <section id="tab-game" class="tab active">
+      <div class="game-container">
+        <header class="game-header">
+          <div class="targets">
+            <span class="target player">
+              <span class="cat-emoji">🐈‍⬛</span>
+              <span class="target-word" id="player-target">…</span>
+            </span>
+            <span class="vs">vs</span>
+            <span class="target ai">
+              <span class="target-word" id="ai-target">…</span>
+              <span class="cat-emoji">🐈</span>
+            </span>
+          </div>
+          <button id="new-pair-btn" class="icon-btn" title="New target pair (↻)">↻ New pair</button>
+        </header>
+
+        <!-- Arena: cats on a rope above a pit -->
+        <div class="arena" id="arena" style="--rope-pos: 0; --pit-rx: 80;">
+          <svg class="arena-svg" viewBox="0 0 1000 320" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+            <!-- Ground / horizon -->
+            <rect class="ground" x="0" y="230" width="1000" height="90" />
+
+            <!-- Pit (rx animates with sudden death) -->
+            <ellipse class="pit" cx="500" cy="240" rx="80" ry="20" />
+            <ellipse class="pit-inner" cx="500" cy="240" rx="76" ry="16" />
+
+            <!-- Rope (left half + right half, knot moves with rope-pos) -->
+            <line class="rope" x1="140" y1="200" x2="860" y2="200" />
+            <circle class="rope-knot" cx="500" cy="200" r="9" />
+
+            <!-- Cats -->
+            <g class="cat-wrap cat-black-wrap">
+              <use class="cat cat-black" href="#cat-black" x="50" y="100" width="160" height="180" />
+            </g>
+            <g class="cat-wrap cat-orange-wrap">
+              <use class="cat cat-orange" href="#cat-orange" x="790" y="100" width="160" height="180" />
+            </g>
+          </svg>
+        </div>
+
+        <div class="round-info">
+          Round <span id="round">1</span>
+          <span id="sudden-death-badge" hidden>· Sudden Death!</span>
+        </div>
+
+        <form id="submit-form" autocomplete="off">
+          <input id="word-input" type="text" placeholder="Type anything..." autocomplete="off"
+                 autocorrect="off" autocapitalize="off" spellcheck="false" />
+          <button id="submit-btn" type="submit">Pull</button>
+        </form>
+
+        <div id="feedback" class="feedback" aria-live="polite"></div>
+
+        <ul id="history" class="history" aria-label="Move history"></ul>
+      </div>
+    </section>
+
+    <!-- ============ HOW TO PLAY TAB ============ -->
+    <section id="tab-how" class="tab">
+      <div class="game-container prose">
+        <h2>How to play</h2>
+        <p>
+          You and an AI cat compete in a semantic tug-of-war. Each round, you each
+          submit one word. The closer your word is in meaning to <em>your</em> target
+          (and the further from your opponent's), the harder you pull the rope to
+          your side.
+        </p>
+        <h3>Scoring</h3>
+        <p>
+          For every word, the server computes
+          <code>similarity(word, your_target) − similarity(word, opponent_target)</code>.
+          Positive scores pull the rope toward you; negative scores pull toward the AI.
+        </p>
+        <h3>Sudden Death</h3>
+        <p>
+          After round 5, the pit at the center starts to widen. Each round, the win
+          threshold gets closer — small pulls can decide the game. Don't let your cat
+          fall in!
+        </p>
+        <h3>Rules</h3>
+        <ul>
+          <li>Real English words only.</li>
+          <li>No morphological duplicates — if "ocean" has been played, you can't play "oceans" or "oceanic".</li>
+          <li>Two cats. One pit. May the better word win.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ============ SETTINGS TAB ============ -->
+    <section id="tab-settings" class="tab">
+      <div class="game-container prose">
+        <h2>Custom target pair</h2>
+        <p>Start a game with your own two target words.</p>
+        <form id="custom-pair-form">
+          <input id="custom-player" type="text" placeholder="Your target word" required />
+          <input id="custom-ai" type="text" placeholder="Opponent target word" required />
+          <button type="submit">Start with custom pair</button>
+        </form>
+
+        <h2>Pair history</h2>
+        <p>You've seen <span id="seen-count">0</span> of 100 pairs.</p>
+        <button id="reset-seen" class="secondary-btn">Reset seen-pair history</button>
+
+        <h2>API endpoint</h2>
+        <p>
+          By default the frontend calls the Worker on the same origin. If you're
+          serving the frontend separately (e.g. <code>npx serve public</code> on
+          :3000 while <code>wrangler dev</code> runs on :8787), set the endpoint:
+        </p>
+        <form id="api-endpoint-form">
+          <input id="api-endpoint" type="url" placeholder="http://localhost:8787" />
+          <button type="submit">Save</button>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <!-- Game-over overlay -->
+  <div id="game-over" class="overlay" hidden>
+    <div class="overlay-card">
+      <h2 id="game-over-title">…</h2>
+      <p id="game-over-subtitle">…</p>
+      <div class="overlay-actions">
+        <button id="play-again-btn">Play again (same pair)</button>
+        <button id="new-pair-after-btn">New pair</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="toast" hidden></div>
+
+  <!-- Cat SVG sprite sheet (loaded inline so <use href="#..."> works) -->
+  <div id="svg-sprites" aria-hidden="true"></div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

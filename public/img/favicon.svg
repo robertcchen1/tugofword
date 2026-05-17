@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Cat paw print: main pad + four toe beans -->
+  <ellipse cx="32" cy="42" rx="14" ry="11" fill="#5a3a18"/>
+  <circle cx="14" cy="26" r="6" fill="#5a3a18"/>
+  <circle cx="25" cy="18" r="6" fill="#5a3a18"/>
+  <circle cx="39" cy="18" r="6" fill="#5a3a18"/>
+  <circle cx="50" cy="26" r="6" fill="#5a3a18"/>
+</svg>
