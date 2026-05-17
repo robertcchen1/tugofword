@@ -21,7 +21,7 @@
   --negative:      #b53a3a;
   --shadow:        0 2px 8px rgba(0,0,0,0.12);
   --radius:        14px;
-  --arena-shift:   380px; /* how far each cat can slide */
+  --arena-shift:   55px; /* how far each cat can lean. Keep small so cats stay on screen. */
 }
 
 * { box-sizing: border-box; }
@@ -163,29 +163,35 @@ main { padding: 14px 12px env(safe-area-inset-bottom); }
 .pit          { fill: var(--pit); transition: rx 1.5s ease-in-out; }
 .pit-inner    { fill: var(--pit-inner); opacity: 0.7; transition: rx 1.5s ease-in-out; }
 .rope         { stroke: var(--accent); stroke-width: 7; stroke-linecap: round; stroke-dasharray: 10 5; }
+/* The knot slides in proportion to rope-pos. Positive = player winning, so
+   the knot (and visually, the rope) moves toward the player on the LEFT.
+   Hence the negative sign. */
 .rope-knot    {
   fill: var(--accent-deep);
-  transform: translateX(calc(var(--rope-pos) * var(--arena-shift) * 0.5));
+  transform: translateX(calc(var(--rope-pos) * -1 * var(--arena-shift) * 1.5));
   transition: transform 700ms cubic-bezier(.34,1.2,.64,1);
 }
 
-/* Cat groups slide based on rope position */
+/* Cat groups lean in the direction of the winning side. When player wins
+   (rope-pos > 0), both cats translate LEFT (negative x) — the orange cat
+   is being dragged toward the pit, the black cat braces. Shift is small
+   (--arena-shift) so cats stay on screen at all rope positions. */
 .cat-wrap {
   transition: transform 700ms cubic-bezier(.34,1.2,.64,1);
   transform-origin: center;
   transform-box: fill-box;
+  /* Default static transform (overridden by idle animation below) */
+  transform: translateX(calc(var(--rope-pos) * -1 * var(--arena-shift)));
 }
-.cat-black-wrap  { transform: translateX(calc(var(--rope-pos) *  var(--arena-shift))); }
-.cat-orange-wrap { transform: translateX(calc(var(--rope-pos) *  var(--arena-shift))); }
 
-/* Idle tug wobble */
+/* Idle tug wobble — keep the rope-pos translation; layer on a small rotate/Y */
 @keyframes tug-idle-left {
-  0%, 100% { transform: translateX(calc(var(--rope-pos) * var(--arena-shift))) rotate(-1.5deg) translateY(-1px); }
-  50%      { transform: translateX(calc(var(--rope-pos) * var(--arena-shift))) rotate( 1.5deg) translateY( 1px); }
+  0%, 100% { transform: translateX(calc(var(--rope-pos) * -1 * var(--arena-shift))) rotate(-1.5deg) translateY(-1px); }
+  50%      { transform: translateX(calc(var(--rope-pos) * -1 * var(--arena-shift))) rotate( 1.5deg) translateY( 1px); }
 }
 @keyframes tug-idle-right {
-  0%, 100% { transform: translateX(calc(var(--rope-pos) * var(--arena-shift))) rotate( 1.5deg) translateY( 1px); }
-  50%      { transform: translateX(calc(var(--rope-pos) * var(--arena-shift))) rotate(-1.5deg) translateY(-1px); }
+  0%, 100% { transform: translateX(calc(var(--rope-pos) * -1 * var(--arena-shift))) rotate( 1.5deg) translateY( 1px); }
+  50%      { transform: translateX(calc(var(--rope-pos) * -1 * var(--arena-shift))) rotate(-1.5deg) translateY(-1px); }
 }
 .cat-black-wrap   { animation: tug-idle-left  2.4s ease-in-out infinite; }
 .cat-orange-wrap  { animation: tug-idle-right 2.4s ease-in-out infinite; animation-delay: -1.2s; }
@@ -195,26 +201,34 @@ main { padding: 14px 12px env(safe-area-inset-bottom); }
 .cat-wrap.bracing { animation: brace  0.6s ease-out; }
 @keyframes shudder {
   0%   { filter: brightness(1); }
-  30%  { transform: translateX(calc(var(--rope-pos) * var(--arena-shift))) scale(0.93) translateY(3px); filter: brightness(0.85); }
+  30%  { transform: translateX(calc(var(--rope-pos) * -1 * var(--arena-shift))) scale(0.93) translateY(3px); filter: brightness(0.85); }
   100% { filter: brightness(1); }
 }
 @keyframes brace {
   0%   { filter: brightness(1); }
-  30%  { transform: translateX(calc(var(--rope-pos) * var(--arena-shift))) scale(1.06) rotate(-4deg) translateY(-2px); filter: brightness(1.1); }
+  30%  { transform: translateX(calc(var(--rope-pos) * -1 * var(--arena-shift))) scale(1.06) rotate(-4deg) translateY(-2px); filter: brightness(1.1); }
   100% { filter: brightness(1); }
 }
 
-/* Falling animation (game over) */
-.cat-wrap.falling { animation: fall-in 1.2s ease-in forwards; }
-@keyframes fall-in {
-  0%   { transform: translateX(calc(var(--rope-pos) * var(--arena-shift))) translateY(0) rotate(0) scale(1);   opacity: 1; }
-  40%  { transform: translateX(calc(var(--rope-pos) * var(--arena-shift) * 0.4)) translateY(40px) rotate(180deg) scale(0.85); opacity: 1; }
-  100% { transform: translateX(0) translateY(120px) rotate(540deg) scale(0); opacity: 0; }
+/* Falling animation (game over). Each cat falls toward the pit (center),
+   so they need different x-targets. Black starts at x=50, pit at x=500
+   (so move +450). Orange starts at x=790 (so move -290). */
+.cat-black-wrap.falling  { animation: fall-in-black  1.2s ease-in forwards; }
+.cat-orange-wrap.falling { animation: fall-in-orange 1.2s ease-in forwards; }
+@keyframes fall-in-black {
+  0%   { transform: translateX(calc(var(--rope-pos) * -1 * var(--arena-shift))) translateY(0) rotate(0) scale(1); opacity: 1; }
+  40%  { transform: translateX(220px) translateY(50px) rotate(180deg) scale(0.85); opacity: 1; }
+  100% { transform: translateX(450px) translateY(140px) rotate(540deg) scale(0); opacity: 0; }
+}
+@keyframes fall-in-orange {
+  0%   { transform: translateX(calc(var(--rope-pos) * -1 * var(--arena-shift))) translateY(0) rotate(0) scale(1); opacity: 1; }
+  40%  { transform: translateX(-140px) translateY(50px) rotate(-180deg) scale(0.85); opacity: 1; }
+  100% { transform: translateX(-290px) translateY(140px) rotate(-540deg) scale(0); opacity: 0; }
 }
 .cat-wrap.cheering { animation: cheer 0.8s ease-out 3; }
 @keyframes cheer {
-  0%, 100% { transform: translateX(calc(var(--rope-pos) * var(--arena-shift))) scale(1); }
-  50%      { transform: translateX(calc(var(--rope-pos) * var(--arena-shift))) scale(1.18) translateY(-8px); }
+  0%, 100% { transform: translateX(calc(var(--rope-pos) * -1 * var(--arena-shift))) scale(1); }
+  50%      { transform: translateX(calc(var(--rope-pos) * -1 * var(--arena-shift))) scale(1.18) translateY(-8px); }
 }
 
 /* =========================================================
@@ -419,7 +433,7 @@ main { padding: 14px 12px env(safe-area-inset-bottom); }
   .targets { font-size: 0.95rem; }
   .target { padding: 4px 10px; }
   #word-input { font-size: 16px; /* prevent iOS zoom */ }
-  :root { --arena-shift: 28vw; }
+  :root { --arena-shift: 6vw; }
   .history { max-height: 140px; }
 }
 
