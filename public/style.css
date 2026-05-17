@@ -182,13 +182,11 @@ main { padding: 14px 12px env(safe-area-inset-bottom); }
   letter-spacing: 1px;
 }
 
-/* The knot slides in proportion to rope-pos. SVG transform attribute would
-   be cleaner here too, but the knot has no animation conflicts so CSS is OK.
-   We position it via the arena's --rope-pos variable (range -1..+1).
-   At rope-pos = +1 the knot is at the LEFT edge of the rope (player winning). */
-.rope-knot    {
-  fill: var(--accent-deep);
-  transform: translateX(calc(var(--rope-pos) * -160px));
+.rope-knot { fill: var(--accent-deep); }
+
+/* The whole rope group slides with the cats (transform set by JS on the
+   rope-wrap <g> in viewBox units, matching .cat-pos). */
+.rope-wrap {
   transition: transform 700ms cubic-bezier(.34,1.2,.64,1);
 }
 
@@ -229,21 +227,25 @@ main { padding: 14px 12px env(safe-area-inset-bottom); }
   100% { transform: scale(1); filter: brightness(1); }
 }
 
-/* Falling — applied to cat-pos. Uses the CSS `translate`/`rotate`/`scale`
-   properties (Transforms Level 2) which COMPOSE with the SVG transform
-   attribute (set by JS) rather than overriding it. So each cat starts at
-   its current pit-edge position and tumbles down + further into the pit. */
-.cat-black-pos.falling  { animation: fall-in-black  1.0s ease-in forwards; }
-.cat-orange-pos.falling { animation: fall-in-orange 1.0s ease-in forwards; }
+/* Falling — applied to cat-pos. Uses CSS translate/rotate/scale (Transforms
+   Level 2) which COMPOSE with the SVG transform attribute on the same
+   element. The cat starts at its current (pit-edge) position, tips toward
+   the pit (anticipation), then drops down into the hole, shrinking and
+   fading as it disappears into the depth. Stays mostly vertical — no
+   wild spinning, no flying off to the side. */
+.cat-black-pos.falling  { animation: fall-in-black  1.0s cubic-bezier(.5,.1,.7,1) forwards; }
+.cat-orange-pos.falling { animation: fall-in-orange 1.0s cubic-bezier(.5,.1,.7,1) forwards; }
 @keyframes fall-in-black {
-  0%   { translate: 0 0;       rotate: 0deg;   scale: 1;    opacity: 1; }
-  40%  { translate: 40px 40px; rotate: 180deg; scale: 0.85; opacity: 1; }
-  100% { translate: 80px 130px; rotate: 540deg; scale: 0;    opacity: 0; }
+  0%   { translate: 0 0;     rotate: 0deg;   scale: 1;   opacity: 1; }
+  15%  { translate: 4px -2px; rotate: 12deg;  scale: 1;   opacity: 1; }   /* tip toward pit */
+  50%  { translate: 14px 22px; rotate: 60deg; scale: 0.75; opacity: 1; }  /* dropping in */
+  100% { translate: 22px 55px; rotate: 120deg; scale: 0.18; opacity: 0; } /* gone */
 }
 @keyframes fall-in-orange {
-  0%   { translate: 0 0;          rotate: 0deg;    scale: 1;    opacity: 1; }
-  40%  { translate: -40px 40px;   rotate: -180deg; scale: 0.85; opacity: 1; }
-  100% { translate: -80px 130px;  rotate: -540deg; scale: 0;    opacity: 0; }
+  0%   { translate: 0 0;       rotate: 0deg;    scale: 1;   opacity: 1; }
+  15%  { translate: -4px -2px; rotate: -12deg;  scale: 1;   opacity: 1; }
+  50%  { translate: -14px 22px; rotate: -60deg; scale: 0.75; opacity: 1; }
+  100% { translate: -22px 55px; rotate: -120deg; scale: 0.18; opacity: 0; }
 }
 .cat-wrap.cheering { animation: cheer 0.8s ease-out 3; }
 @keyframes cheer {

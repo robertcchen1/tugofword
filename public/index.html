@@ -51,9 +51,13 @@
             <ellipse class="pit" cx="500" cy="240" rx="40" ry="20" />
             <ellipse class="pit-inner" cx="500" cy="240" rx="36" ry="16" />
 
-            <!-- Rope: spans between the cats' inward-facing paws -->
-            <line class="rope" x1="340" y1="200" x2="660" y2="200" />
-            <circle class="rope-knot" cx="500" cy="200" r="9" />
+            <!-- Rope + knot wrapped so they slide with the cats (SVG
+                 transform attribute set by JS, same shift as .cat-pos).
+                 The rope stays attached to both cats at all times. -->
+            <g class="rope-wrap" transform="translate(0 0)">
+              <line class="rope" x1="340" y1="200" x2="660" y2="200" />
+              <circle class="rope-knot" cx="500" cy="200" r="9" />
+            </g>
 
             <!-- Cats — outer <g> for JS-set position (SVG transform attribute,
                  in viewBox units), inner <g> for CSS animations (wobble, pull). -->

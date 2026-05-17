@@ -136,6 +136,8 @@ function renderState(s) {
   const shift = -leanFrac * distToPitEdge;
   arena.querySelector(".cat-black-pos").setAttribute("transform", `translate(${shift} 0)`);
   arena.querySelector(".cat-orange-pos").setAttribute("transform", `translate(${shift} 0)`);
+  // Rope shifts the same amount so it stays connected to both cats' paws.
+  arena.querySelector(".rope-wrap").setAttribute("transform", `translate(${shift} 0)`);
 
   // ---- Imbalance readout ----
   const imb = document.getElementById("imbalance-text");
