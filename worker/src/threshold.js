@@ -12,10 +12,17 @@ export function thresholdFor(round) {
 }
 
 // Convenience for the client: how wide should the pit appear (as a fraction
-// of half the arena)? When threshold = 1.0 the pit is at its minimum (narrow);
-// when threshold = 0.3 the pit nearly reaches the cats.
+// of TOTAL arena width — so 0.18 means the pit extends 18% of the arena
+// width to either side of center).
+//
+// Cats are anchored 20% from center on each side (normalized 0.2). The pit
+// max must stay just inside that so the cat doesn't visually overlap the
+// pit at rest. The frontend separately drives the cat lean so that when
+// ropePos = ±threshold, the losing cat's center lands at the pit edge —
+// triggering the fall right when the pit "reaches" the cat.
 export function pitHalfWidthFor(round) {
   const t = thresholdFor(round);
-  // Map threshold 1.0 -> pit 0.08, threshold 0.3 -> pit 0.45.
-  return 0.08 + (1 - t) * 0.53;
+  // At t = 1.0 (rounds 1-5):    pit = 0.04 (small, decorative)
+  // At t = 0.3 (deep sudden death): pit = 0.18 (just inside cat at 0.20)
+  return 0.04 + (1 - t) * 0.20;
 }

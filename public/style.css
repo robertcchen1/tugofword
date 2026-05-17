@@ -163,73 +163,92 @@ main { padding: 14px 12px env(safe-area-inset-bottom); }
 .pit          { fill: var(--pit); transition: rx 1.5s ease-in-out; }
 .pit-inner    { fill: var(--pit-inner); opacity: 0.7; transition: rx 1.5s ease-in-out; }
 .rope         { stroke: var(--accent); stroke-width: 7; stroke-linecap: round; stroke-dasharray: 10 5; }
-/* The knot slides in proportion to rope-pos. Positive = player winning, so
-   the knot (and visually, the rope) moves toward the player on the LEFT.
-   Hence the negative sign. */
+/* Imbalance readout (centered above the pit) */
+.imbalance {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-weight: 800;
+  font-size: 32px;
+  fill: var(--accent-deep);
+  transition: fill 300ms;
+}
+.imbalance.positive { fill: var(--positive); }
+.imbalance.negative { fill: var(--negative); }
+.imbalance-label {
+  font-family: ui-rounded, "Nunito", system-ui, sans-serif;
+  font-size: 11px;
+  fill: var(--accent-deep);
+  opacity: 0.55;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* The knot slides in proportion to rope-pos. SVG transform attribute would
+   be cleaner here too, but the knot has no animation conflicts so CSS is OK.
+   We position it via the arena's --rope-pos variable (range -1..+1).
+   At rope-pos = +1 the knot is at the LEFT edge of the rope (player winning). */
 .rope-knot    {
   fill: var(--accent-deep);
-  transform: translateX(calc(var(--rope-pos) * -1 * var(--arena-shift) * 1.5));
+  transform: translateX(calc(var(--rope-pos) * -160px));
   transition: transform 700ms cubic-bezier(.34,1.2,.64,1);
 }
 
-/* Cat groups lean in the direction of the winning side. When player wins
-   (rope-pos > 0), both cats translate LEFT (negative x) — the orange cat
-   is being dragged toward the pit, the black cat braces. Shift is small
-   (--arena-shift) so cats stay on screen at all rope positions. */
-.cat-wrap {
+/* Cat positioning: outer .cat-pos has SVG transform attribute (viewBox units,
+   set by JS); inner .cat-wrap has CSS animations only. No coordinate-system
+   confusion between the two. */
+.cat-pos {
   transition: transform 700ms cubic-bezier(.34,1.2,.64,1);
+}
+.cat-wrap {
   transform-origin: center;
   transform-box: fill-box;
-  /* Default static transform (overridden by idle animation below) */
-  transform: translateX(calc(var(--rope-pos) * -1 * var(--arena-shift)));
 }
 
-/* Idle tug wobble — keep the rope-pos translation; layer on a small rotate/Y */
+/* Idle tug wobble — small rotate/Y, no x-translation (cat-pos handles that) */
 @keyframes tug-idle-left {
-  0%, 100% { transform: translateX(calc(var(--rope-pos) * -1 * var(--arena-shift))) rotate(-1.5deg) translateY(-1px); }
-  50%      { transform: translateX(calc(var(--rope-pos) * -1 * var(--arena-shift))) rotate( 1.5deg) translateY( 1px); }
+  0%, 100% { transform: rotate(-1.5deg) translateY(-1px); }
+  50%      { transform: rotate( 1.5deg) translateY( 1px); }
 }
 @keyframes tug-idle-right {
-  0%, 100% { transform: translateX(calc(var(--rope-pos) * -1 * var(--arena-shift))) rotate( 1.5deg) translateY( 1px); }
-  50%      { transform: translateX(calc(var(--rope-pos) * -1 * var(--arena-shift))) rotate(-1.5deg) translateY(-1px); }
+  0%, 100% { transform: rotate( 1.5deg) translateY( 1px); }
+  50%      { transform: rotate(-1.5deg) translateY(-1px); }
 }
 .cat-black-wrap   { animation: tug-idle-left  2.4s ease-in-out infinite; }
 .cat-orange-wrap  { animation: tug-idle-right 2.4s ease-in-out infinite; animation-delay: -1.2s; }
 
 /* Pull reactions */
 .cat-wrap.pulled  { animation: shudder 0.6s ease-out; }
-.cat-wrap.bracing { animation: brace  0.6s ease-out; }
+.cat-wrap.bracing { animation: brace   0.6s ease-out; }
 @keyframes shudder {
-  0%   { filter: brightness(1); }
-  30%  { transform: translateX(calc(var(--rope-pos) * -1 * var(--arena-shift))) scale(0.93) translateY(3px); filter: brightness(0.85); }
-  100% { filter: brightness(1); }
+  0%   { transform: scale(1); filter: brightness(1); }
+  30%  { transform: scale(0.93) translateY(3px); filter: brightness(0.85); }
+  100% { transform: scale(1); filter: brightness(1); }
 }
 @keyframes brace {
-  0%   { filter: brightness(1); }
-  30%  { transform: translateX(calc(var(--rope-pos) * -1 * var(--arena-shift))) scale(1.06) rotate(-4deg) translateY(-2px); filter: brightness(1.1); }
-  100% { filter: brightness(1); }
+  0%   { transform: scale(1); filter: brightness(1); }
+  30%  { transform: scale(1.06) rotate(-4deg) translateY(-2px); filter: brightness(1.1); }
+  100% { transform: scale(1); filter: brightness(1); }
 }
 
-/* Falling animation (game over). Cats are anchored close to the pit
-   (black at x=220, orange at x=620; pit at x=500), so the fall is short.
-   Black center=300 → needs +200 to reach pit center.
-   Orange center=700 → needs -200 to reach pit center. */
-.cat-black-wrap.falling  { animation: fall-in-black  1.0s ease-in forwards; }
-.cat-orange-wrap.falling { animation: fall-in-orange 1.0s ease-in forwards; }
+/* Falling — applied to cat-pos. Uses the CSS `translate`/`rotate`/`scale`
+   properties (Transforms Level 2) which COMPOSE with the SVG transform
+   attribute (set by JS) rather than overriding it. So each cat starts at
+   its current pit-edge position and tumbles down + further into the pit. */
+.cat-black-pos.falling  { animation: fall-in-black  1.0s ease-in forwards; }
+.cat-orange-pos.falling { animation: fall-in-orange 1.0s ease-in forwards; }
 @keyframes fall-in-black {
-  0%   { transform: translateX(calc(var(--rope-pos) * -1 * var(--arena-shift))) translateY(0) rotate(0) scale(1); opacity: 1; }
-  40%  { transform: translateX(100px) translateY(40px) rotate(180deg) scale(0.85); opacity: 1; }
-  100% { transform: translateX(200px) translateY(130px) rotate(540deg) scale(0); opacity: 0; }
+  0%   { translate: 0 0;       rotate: 0deg;   scale: 1;    opacity: 1; }
+  40%  { translate: 40px 40px; rotate: 180deg; scale: 0.85; opacity: 1; }
+  100% { translate: 80px 130px; rotate: 540deg; scale: 0;    opacity: 0; }
 }
 @keyframes fall-in-orange {
-  0%   { transform: translateX(calc(var(--rope-pos) * -1 * var(--arena-shift))) translateY(0) rotate(0) scale(1); opacity: 1; }
-  40%  { transform: translateX(-100px) translateY(40px) rotate(-180deg) scale(0.85); opacity: 1; }
-  100% { transform: translateX(-200px) translateY(130px) rotate(-540deg) scale(0); opacity: 0; }
+  0%   { translate: 0 0;          rotate: 0deg;    scale: 1;    opacity: 1; }
+  40%  { translate: -40px 40px;   rotate: -180deg; scale: 0.85; opacity: 1; }
+  100% { translate: -80px 130px;  rotate: -540deg; scale: 0;    opacity: 0; }
 }
 .cat-wrap.cheering { animation: cheer 0.8s ease-out 3; }
 @keyframes cheer {
-  0%, 100% { transform: translateX(calc(var(--rope-pos) * -1 * var(--arena-shift))) scale(1); }
-  50%      { transform: translateX(calc(var(--rope-pos) * -1 * var(--arena-shift))) scale(1.18) translateY(-8px); }
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.18) translateY(-8px); }
 }
 
 /* =========================================================

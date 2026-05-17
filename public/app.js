@@ -97,6 +97,12 @@ document.querySelectorAll(".tab-btn").forEach(btn => {
 // =========================================================
 let state = null;
 
+// Visual geometry (must match index.html SVG anchor positions)
+const CAT_BLACK_CENTER  = 300;  // viewBox x of black-cat center at rest
+const CAT_ORANGE_CENTER = 700;  // viewBox x of orange-cat center at rest
+const PIT_CENTER        = 500;
+const CAT_DIST_TO_PIT   = CAT_ORANGE_CENTER - PIT_CENTER; // 200, symmetric
+
 function renderState(s) {
   state = s;
   document.getElementById("player-target").textContent = s.playerTarget;
@@ -105,11 +111,40 @@ function renderState(s) {
 
   const arena = document.getElementById("arena");
   arena.style.setProperty("--rope-pos", s.ropePos);
-  // Pit rx: SVG viewBox is 0..1000, so multiply pitHalfWidth (0..0.5) by 1000
+
+  // ---- Pit width ----
+  // pitHalfWidth from backend is a fraction of TOTAL arena (0.04..0.18 typical).
+  // In viewBox: pitRx = pitHalfWidth * 1000 → pit spans (500 - pitRx)..(500 + pitRx).
   const pitRx = s.pitHalfWidth * 1000;
   arena.querySelector(".pit").setAttribute("rx", pitRx);
   arena.querySelector(".pit-inner").setAttribute("rx", Math.max(0, pitRx - 4));
 
+  // ---- Cat positions (SVG transform attribute, in viewBox units) ----
+  // Goal: when |ropePos| = threshold (game ends), the LOSING cat's center
+  // lands exactly at the pit edge — so the fall is triggered right when
+  // the pit visually "reaches under" the cat.
+  //
+  // distToPitEdge = CAT_DIST_TO_PIT - pitRx  (room for the cat to slide
+  //                                            before reaching pit edge)
+  // leanFrac = ropePos / threshold (clamped ±1 — should always be inside
+  //                                  for an in-play state)
+  // shift = -leanFrac * distToPitEdge
+  //   (positive ropePos → negative shift → both cats slide LEFT, orange
+  //    toward pit on its left, black bracing back further left)
+  const distToPitEdge = Math.max(0, CAT_DIST_TO_PIT - pitRx);
+  const leanFrac = Math.max(-1, Math.min(1, s.ropePos / Math.max(0.01, s.threshold)));
+  const shift = -leanFrac * distToPitEdge;
+  arena.querySelector(".cat-black-pos").setAttribute("transform", `translate(${shift} 0)`);
+  arena.querySelector(".cat-orange-pos").setAttribute("transform", `translate(${shift} 0)`);
+
+  // ---- Imbalance readout ----
+  const imb = document.getElementById("imbalance-text");
+  const val = s.ropePos;
+  imb.textContent = (val >= 0 ? "+" : "") + val.toFixed(3);
+  imb.classList.toggle("positive", val > 0.02);
+  imb.classList.toggle("negative", val < -0.02);
+
+  // ---- Sudden death styling ----
   const isSuddenDeath = s.round > 5;
   document.body.classList.toggle("sudden-death", isSuddenDeath);
   document.getElementById("sudden-death-badge").hidden = !isSuddenDeath;
@@ -166,8 +201,10 @@ async function newGame({ customPair } = {}) {
     const s = await api("/api/new-game", body);
     document.getElementById("history").innerHTML = "";
     document.getElementById("game-over").hidden = true;
-    document.querySelector(".cat-black-wrap").classList.remove("falling", "cheering");
-    document.querySelector(".cat-orange-wrap").classList.remove("falling", "cheering");
+    document.querySelector(".cat-black-pos").classList.remove("falling");
+    document.querySelector(".cat-orange-pos").classList.remove("falling");
+    document.querySelector(".cat-black-wrap").classList.remove("cheering");
+    document.querySelector(".cat-orange-wrap").classList.remove("cheering");
     renderState(s);
     rememberPair(s.playerTarget, s.aiTarget);
     setInputDisabled(false);
@@ -232,15 +269,17 @@ async function submitWord(word) {
 
 function endGame(winner) {
   const playerWon = winner === "player";
-  const black  = document.querySelector(".cat-black-wrap");
-  const orange = document.querySelector(".cat-orange-wrap");
+  const blackWrap  = document.querySelector(".cat-black-wrap");
+  const orangeWrap = document.querySelector(".cat-orange-wrap");
+  const blackPos   = document.querySelector(".cat-black-pos");
+  const orangePos  = document.querySelector(".cat-orange-pos");
   if (playerWon) {
-    orange.classList.add("falling");
-    black.classList.add("cheering");
+    orangePos.classList.add("falling");
+    blackWrap.classList.add("cheering");
     playWin();
   } else {
-    black.classList.add("falling");
-    orange.classList.add("cheering");
+    blackPos.classList.add("falling");
+    orangeWrap.classList.add("cheering");
     playLose();
   }
 

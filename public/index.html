@@ -36,25 +36,36 @@
         </header>
 
         <!-- Arena: cats on a rope above a pit -->
-        <div class="arena" id="arena" style="--rope-pos: 0; --pit-rx: 80;">
+        <div class="arena" id="arena" style="--rope-pos: 0;">
           <svg class="arena-svg" viewBox="0 0 1000 320" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
             <!-- Ground / horizon -->
             <rect class="ground" x="0" y="230" width="1000" height="90" />
 
+            <!-- Imbalance readout (centered above pit) -->
+            <text class="imbalance" id="imbalance-text" x="500" y="50"
+                  text-anchor="middle" dominant-baseline="middle">0.000</text>
+            <text class="imbalance-label" x="500" y="78"
+                  text-anchor="middle" dominant-baseline="middle">rope position</text>
+
             <!-- Pit (rx animates with sudden death) -->
-            <ellipse class="pit" cx="500" cy="240" rx="80" ry="20" />
-            <ellipse class="pit-inner" cx="500" cy="240" rx="76" ry="16" />
+            <ellipse class="pit" cx="500" cy="240" rx="40" ry="20" />
+            <ellipse class="pit-inner" cx="500" cy="240" rx="36" ry="16" />
 
             <!-- Rope: spans between the cats' inward-facing paws -->
             <line class="rope" x1="340" y1="200" x2="660" y2="200" />
             <circle class="rope-knot" cx="500" cy="200" r="9" />
 
-            <!-- Cats — anchored close to the pit so the fall is short -->
-            <g class="cat-wrap cat-black-wrap">
-              <use class="cat cat-black" href="#cat-black" x="220" y="100" width="160" height="180" />
+            <!-- Cats — outer <g> for JS-set position (SVG transform attribute,
+                 in viewBox units), inner <g> for CSS animations (wobble, pull). -->
+            <g class="cat-pos cat-black-pos" transform="translate(0 0)">
+              <g class="cat-wrap cat-black-wrap">
+                <use class="cat cat-black" href="#cat-black" x="220" y="100" width="160" height="180" />
+              </g>
             </g>
-            <g class="cat-wrap cat-orange-wrap">
-              <use class="cat cat-orange" href="#cat-orange" x="620" y="100" width="160" height="180" />
+            <g class="cat-pos cat-orange-pos" transform="translate(0 0)">
+              <g class="cat-wrap cat-orange-wrap">
+                <use class="cat cat-orange" href="#cat-orange" x="620" y="100" width="160" height="180" />
+              </g>
             </g>
           </svg>
         </div>
