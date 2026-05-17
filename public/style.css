@@ -210,20 +210,21 @@ main { padding: 14px 12px env(safe-area-inset-bottom); }
   100% { filter: brightness(1); }
 }
 
-/* Falling animation (game over). Each cat falls toward the pit (center),
-   so they need different x-targets. Black starts at x=50, pit at x=500
-   (so move +450). Orange starts at x=790 (so move -290). */
-.cat-black-wrap.falling  { animation: fall-in-black  1.2s ease-in forwards; }
-.cat-orange-wrap.falling { animation: fall-in-orange 1.2s ease-in forwards; }
+/* Falling animation (game over). Cats are anchored close to the pit
+   (black at x=220, orange at x=620; pit at x=500), so the fall is short.
+   Black center=300 → needs +200 to reach pit center.
+   Orange center=700 → needs -200 to reach pit center. */
+.cat-black-wrap.falling  { animation: fall-in-black  1.0s ease-in forwards; }
+.cat-orange-wrap.falling { animation: fall-in-orange 1.0s ease-in forwards; }
 @keyframes fall-in-black {
   0%   { transform: translateX(calc(var(--rope-pos) * -1 * var(--arena-shift))) translateY(0) rotate(0) scale(1); opacity: 1; }
-  40%  { transform: translateX(220px) translateY(50px) rotate(180deg) scale(0.85); opacity: 1; }
-  100% { transform: translateX(450px) translateY(140px) rotate(540deg) scale(0); opacity: 0; }
+  40%  { transform: translateX(100px) translateY(40px) rotate(180deg) scale(0.85); opacity: 1; }
+  100% { transform: translateX(200px) translateY(130px) rotate(540deg) scale(0); opacity: 0; }
 }
 @keyframes fall-in-orange {
   0%   { transform: translateX(calc(var(--rope-pos) * -1 * var(--arena-shift))) translateY(0) rotate(0) scale(1); opacity: 1; }
-  40%  { transform: translateX(-140px) translateY(50px) rotate(-180deg) scale(0.85); opacity: 1; }
-  100% { transform: translateX(-290px) translateY(140px) rotate(-540deg) scale(0); opacity: 0; }
+  40%  { transform: translateX(-100px) translateY(40px) rotate(-180deg) scale(0.85); opacity: 1; }
+  100% { transform: translateX(-200px) translateY(130px) rotate(-540deg) scale(0); opacity: 0; }
 }
 .cat-wrap.cheering { animation: cheer 0.8s ease-out 3; }
 @keyframes cheer {

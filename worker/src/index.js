@@ -47,9 +47,14 @@ function makeInitialState(playerTarget, aiTarget) {
 }
 
 function applyMove(state, who, word, pull) {
+  // `pull` is always from the global perspective:
+  //   positive = toward player (left)
+  //   negative = toward AI     (right)
+  // So we add it directly regardless of who played the word.
+  // A "bad" word by either player produces the appropriate-signed pull naturally.
   const newState = {
     ...state,
-    ropePos: Math.max(-1, Math.min(1, state.ropePos + (who === "player" ? pull : -pull))),
+    ropePos: Math.max(-1, Math.min(1, state.ropePos + pull)),
     round: state.round + (who === "ai" ? 1 : 0), // round increments after AI plays
     playedStems: [...state.playedStems, stem(word)],
     history: [...state.history, { who, word, pull }]
