@@ -147,8 +147,8 @@ function renderState(s) {
   imb.classList.toggle("negative", val < -0.02);
 
   // ---- Sudden death styling ----
-  // Mirror the backend curve: threshold starts shrinking at round 3.
-  const isSuddenDeath = s.round > 2;
+  // Mirror the backend curve: threshold starts shrinking after round 5.
+  const isSuddenDeath = s.round > 5;
   document.body.classList.toggle("sudden-death", isSuddenDeath);
   document.getElementById("sudden-death-badge").hidden = !isSuddenDeath;
 }

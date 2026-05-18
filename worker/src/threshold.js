@@ -1,19 +1,14 @@
 // Sudden-death threshold curve.
 //
-// Tuned so most games end by round 8-10. Typical per-turn pulls are
-// 0.05-0.2; cumulative rope position rarely exceeds 0.5 by round 10
-// when both sides play well. So the win threshold needs to drop into
-// that range quickly.
-//
-// Rounds 1..2: standard threshold = 0.5 (warm-up; only a strong streak wins).
-// Round 3+:    threshold shrinks ~20% per round, floor at 0.08.
-//
-// The "pit half-width" rendered on the frontend is the inverse — as the
-// threshold shrinks, the pit appears to widen toward the cats.
+// Rounds 1..5: standard threshold = 0.5 (warm-up; both sides can build
+//              rope position without much pressure).
+// Round 6+:    sudden death — threshold shrinks 30% per round, floor at
+//              0.08. Hits the floor by round 10, so even the longest
+//              games rarely drag past round 11.
 
 export function thresholdFor(round) {
-  if (round <= 2) return 0.5;
-  return Math.max(0.08, 0.5 * Math.pow(0.80, round - 2));
+  if (round <= 5) return 0.5;
+  return Math.max(0.08, 0.5 * Math.pow(0.70, round - 5));
 }
 
 // Pit half-width (fraction of TOTAL arena width — so 0.20 means pit edge

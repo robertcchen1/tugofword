@@ -8,8 +8,8 @@ A turn-based semantic word game where you (the black cat) compete against an AI 
 2. You and the AI each submit one word per round.
 3. Each word is embedded and scored: `similarity(word, your_target) − similarity(word, opponent_target)`.
 4. Positive pulls move the rope toward you; negative toward the AI.
-5. After round 2, **sudden death** begins — the pit widens each round so a smaller pull is enough to win.
-6. Most games end by round 6–10. Don't let your cat fall in!
+5. After round 5, **sudden death** begins — the pit widens each round so a smaller pull is enough to win.
+6. Most games end by round 7–10. Don't let your cat fall in!
 
 **Rules:** real English words only; no morphological duplicates (the Porter stemmer rejects "oceans" if "ocean" has been played).
 
