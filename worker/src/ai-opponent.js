@@ -9,6 +9,7 @@
 
 import { stem } from "./stemmer.js";
 import { isRealWord } from "./dictionary.js";
+import { themeWordsFor } from "./targets.js";
 
 // gemini-2.5-flash-lite has the most generous free-tier quota of the
 // current Gemini lineup. The full flash variants are gated/rate-limited
@@ -149,12 +150,19 @@ const FALLBACKS = {
 };
 
 function pickFallback(target, forbiddenStems) {
-  const list = FALLBACKS[target.toLowerCase()] || [];
-  for (const w of list) {
+  const t = target.toLowerCase();
+  // Chain: target-specific hand-curated → theme-related (same category as the
+  // target) → generic. This guarantees every target in PAIRS has strong
+  // semantic options, not just the ones we explicitly hand-wrote above.
+  const candidates = [
+    ...(FALLBACKS[t] || []),
+    ...themeWordsFor(t)
+  ];
+  for (const w of candidates) {
     if (!forbiddenStems.includes(stem(w))) return w;
   }
-  // Last resort — generic broad words. These are weak (low pull) so we
-  // really do try the per-target list first.
+  // Last resort — generic broad words. Should rarely fire now that every
+  // theme has 16+ related words.
   const generic = ["thing", "place", "kind", "form", "shape", "matter", "object", "nature"];
   for (const w of generic) if (!forbiddenStems.includes(stem(w))) return w;
   return "stuff";
