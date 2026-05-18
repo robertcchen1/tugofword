@@ -10,8 +10,15 @@
 import { stem } from "./stemmer.js";
 import { isRealWord } from "./dictionary.js";
 
-const LLM_MODEL = "gemini-2.0-flash";
+// gemini-2.5-flash-lite has the most generous free-tier quota of the
+// current Gemini lineup. The full flash variants are gated/rate-limited
+// without billing setup.
+const LLM_MODEL = "gemini-2.5-flash-lite";
 const LLM_URL = `https://generativelanguage.googleapis.com/v1beta/models/${LLM_MODEL}:generateContent`;
+
+class RateLimitError extends Error {
+  constructor(msg) { super(msg); this.name = "RateLimitError"; }
+}
 
 async function callGemini(env, systemPrompt, userMessage, temperature) {
   const apiKey = env.GOOGLE_AI_KEY;
@@ -29,12 +36,17 @@ async function callGemini(env, systemPrompt, userMessage, temperature) {
 
   if (!res.ok) {
     const errText = await res.text();
+    if (res.status === 429) {
+      throw new RateLimitError(`Gemini rate limit: ${errText.slice(0, 200)}`);
+    }
     throw new Error(`Gemini API ${res.status}: ${errText.slice(0, 300)}`);
   }
 
   const data = await res.json();
   return data.candidates?.[0]?.content?.parts?.[0]?.text || "";
 }
+
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
 const SYSTEM_PROMPT_TEMPLATE = ({ aiTarget, playerTarget, ropePos, threshold, round, playedStems }) => `
 You are an AI opponent in "Tug of Word," a competitive semantic word game.
@@ -164,18 +176,26 @@ export async function generateAiMove(gameState, env) {
     aiTarget, playerTarget, ropePos, threshold, round, playedStems
   });
 
-  for (let attempt = 0; attempt < 5; attempt++) {
+  // Up to 3 LLM tries with backoff between attempts (free tier is 15 RPM,
+  // so we wait ~500ms between calls). Rate-limit errors bail immediately
+  // — no point hammering, the curated FALLBACKS list is strong enough.
+  for (let attempt = 0; attempt < 3; attempt++) {
+    if (attempt > 0) await sleep(500);
     try {
       const userMsg = attempt === 0
         ? "What word do you play this turn?"
         : `Your previous answer was rejected (either a forbidden stem or not a real word). Try a different word — think of an adjacent concept related to "${aiTarget}" that hasn't been used yet.`;
-      const raw = await callGemini(env, prompt, userMsg, 0.5 + attempt * 0.15);
+      const raw = await callGemini(env, prompt, userMsg, 0.5 + attempt * 0.2);
       const word = extractWord(raw);
       if (!word) continue;
       if (playedStems.includes(stem(word))) continue;
       if (!(await isRealWord(word))) continue;
       return word;
     } catch (err) {
+      if (err instanceof RateLimitError) {
+        console.warn("Gemini rate-limited; using curated fallback.");
+        break;
+      }
       console.error("Gemini error (attempt " + attempt + "):", err.message);
     }
   }

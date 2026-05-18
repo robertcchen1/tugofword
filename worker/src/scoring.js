@@ -1,14 +1,18 @@
-// Semantic-differential scoring via Google AI text-embedding-004.
+// Semantic-differential scoring via Google AI gemini-embedding-001.
 //
 // scorePull(input, playerTarget, aiTarget, env) -> number in roughly [-1, +1]
 //   positive => pulls rope toward player
 //   negative => pulls rope toward AI
 //
-// Uses Google's batchEmbedContents endpoint for a single round-trip per turn.
-// Requires GOOGLE_AI_KEY as a Worker secret (or in worker/.dev.vars for local).
+// Google's current embedding models only support single-text :embedContent
+// (the old :batchEmbedContents was removed). We issue 3 parallel single
+// requests per turn — same effective latency, still well under the free
+// tier (1,500 req/day = ~500 turns/day).
+//
+// Requires GOOGLE_AI_KEY as a Worker secret (or in worker/.dev.vars).
 
-const EMBED_MODEL = "text-embedding-004";
-const EMBED_URL = `https://generativelanguage.googleapis.com/v1beta/models/${EMBED_MODEL}:batchEmbedContents`;
+const EMBED_MODEL = "gemini-embedding-001";
+const EMBED_URL = `https://generativelanguage.googleapis.com/v1beta/models/${EMBED_MODEL}:embedContent`;
 
 function cosineSim(a, b) {
   let dot = 0, na = 0, nb = 0;
@@ -21,6 +25,27 @@ function cosineSim(a, b) {
   return denom === 0 ? 0 : dot / denom;
 }
 
+async function embedOne(apiKey, text) {
+  const res = await fetch(`${EMBED_URL}?key=${apiKey}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: `models/${EMBED_MODEL}`,
+      content: { parts: [{ text }] }
+    })
+  });
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`Google embed API ${res.status}: ${errText.slice(0, 300)}`);
+  }
+  const data = await res.json();
+  const values = data.embedding?.values;
+  if (!values) {
+    throw new Error(`Unexpected embed response: ${JSON.stringify(data).slice(0, 300)}`);
+  }
+  return values;
+}
+
 export async function embed(env, texts) {
   const apiKey = env.GOOGLE_AI_KEY;
   if (!apiKey) {
@@ -30,30 +55,8 @@ export async function embed(env, texts) {
       "For prod: run `npx wrangler secret put GOOGLE_AI_KEY`."
     );
   }
-
-  const body = {
-    requests: texts.map(text => ({
-      model: `models/${EMBED_MODEL}`,
-      content: { parts: [{ text }] }
-    }))
-  };
-
-  const res = await fetch(`${EMBED_URL}?key=${apiKey}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body)
-  });
-
-  if (!res.ok) {
-    const errText = await res.text();
-    throw new Error(`Google embed API ${res.status}: ${errText.slice(0, 300)}`);
-  }
-
-  const data = await res.json();
-  if (!data.embeddings || !Array.isArray(data.embeddings)) {
-    throw new Error(`Unexpected Google embed response: ${JSON.stringify(data).slice(0, 300)}`);
-  }
-  return data.embeddings.map(e => e.values);
+  // Parallel single-text calls — Google removed the batch endpoint for current models.
+  return Promise.all(texts.map(t => embedOne(apiKey, t)));
 }
 
 export async function scorePull(input, playerTarget, aiTarget, env) {
