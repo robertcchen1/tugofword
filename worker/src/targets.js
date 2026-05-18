@@ -9,7 +9,7 @@ export const THEMES = {
     pairs: [
       ["space", "ocean"], ["forest", "desert"], ["mountain", "valley"],
       ["river", "canyon"], ["volcano", "glacier"], ["jungle", "tundra"],
-      ["meadow", "swamp"], ["island", "peninsula"], ["cliff", "beach"],
+      ["meadow", "swamp"], ["delta", "plateau"], ["cliff", "beach"],
       ["cave", "summit"]
     ],
     related: [
@@ -20,15 +20,17 @@ export const THEMES = {
   },
   "cosmos": {
     pairs: [
-      ["sun", "moon"], ["dawn", "dusk"], ["comet", "planet"],
-      ["lightning", "rainbow"], ["star", "cloud"], ["galaxy", "atmosphere"],
+      ["sun", "moon"], ["thunderstorm", "rainbow"], ["comet", "planet"],
+      ["lightning", "fog"], ["star", "cloud"], ["galaxy", "atmosphere"],
       ["eclipse", "aurora"], ["meteor", "satellite"], ["nebula", "horizon"],
-      ["sunrise", "sunset"]
+      ["blizzard", "heatwave"]
     ],
     related: [
       "sky", "celestial", "cosmic", "stellar", "orbit", "luminous", "glow",
-      "twilight", "radiance", "halo", "infinite", "vast", "shimmer",
-      "constellation", "zodiac", "ethereal", "interstellar"
+      "radiance", "halo", "infinite", "vast", "shimmer",
+      "constellation", "zodiac", "ethereal", "interstellar",
+      "storm", "thunder", "drizzle", "wind", "weather", "atmospheric",
+      "downpour", "breezy", "cloudy"
     ]
   },
   "animals": {
@@ -47,8 +49,8 @@ export const THEMES = {
   "elements": {
     pairs: [
       ["fire", "water"], ["earth", "air"], ["ice", "steam"],
-      ["sand", "stone"], ["lava", "frost"], ["wood", "metal"],
-      ["smoke", "mist"], ["dust", "mud"], ["coal", "diamond"],
+      ["ember", "snowflake"], ["lava", "frost"], ["wood", "metal"],
+      ["gravel", "crystal"], ["dust", "mud"], ["coal", "diamond"],
       ["clay", "glass"]
     ],
     related: [
@@ -60,7 +62,7 @@ export const THEMES = {
   "time": {
     pairs: [
       ["spring", "autumn"], ["morning", "midnight"], ["past", "future"],
-      ["summer", "winter"], ["dawn", "twilight"], ["yesterday", "tomorrow"],
+      ["summer", "winter"], ["weekday", "weekend"], ["yesterday", "tomorrow"],
       ["century", "moment"], ["ancient", "modern"], ["sunrise", "midnight"],
       ["youth", "elder"]
     ],
@@ -99,9 +101,9 @@ export const THEMES = {
   "music_art": {
     pairs: [
       ["piano", "drum"], ["painting", "sculpture"], ["jazz", "symphony"],
-      ["violin", "guitar"], ["opera", "ballet"], ["mural", "mosaic"],
+      ["violin", "guitar"], ["opera", "ballet"], ["lullaby", "anthem"],
       ["sketch", "photograph"], ["flute", "trumpet"], ["choir", "soloist"],
-      ["watercolor", "charcoal"]
+      ["pottery", "tattoo"]
     ],
     related: [
       "melody", "rhythm", "harmony", "tempo", "note", "chord", "canvas",
@@ -111,9 +113,9 @@ export const THEMES = {
   },
   "food": {
     pairs: [
-      ["bread", "sushi"], ["coffee", "tea"], ["cake", "salad"],
-      ["pasta", "rice"], ["soup", "sandwich"], ["chocolate", "vanilla"],
-      ["pizza", "burger"], ["cheese", "honey"], ["apple", "mango"],
+      ["bread", "sushi"], ["taco", "ramen"], ["cake", "salad"],
+      ["bacon", "tofu"], ["soup", "sandwich"], ["popcorn", "caviar"],
+      ["lemon", "garlic"], ["cheese", "honey"], ["mushroom", "berry"],
       ["pancake", "omelette"]
     ],
     related: [
