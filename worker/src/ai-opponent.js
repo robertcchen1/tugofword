@@ -11,10 +11,9 @@ import { stem } from "./stemmer.js";
 import { isRealWord } from "./dictionary.js";
 import { themeWordsFor } from "./targets.js";
 
-// gemini-2.5-flash-lite has the most generous free-tier quota of the
-// current Gemini lineup. The full flash variants are gated/rate-limited
-// without billing setup.
-const LLM_MODEL = "gemini-2.5-flash-lite";
+// gemini-3.1-flash-lite — newest free-tier-friendly model. Same
+// generateContent endpoint and request shape as the 2.x line.
+const LLM_MODEL = "gemini-3.1-flash-lite";
 const LLM_URL = `https://generativelanguage.googleapis.com/v1beta/models/${LLM_MODEL}:generateContent`;
 
 class RateLimitError extends Error {

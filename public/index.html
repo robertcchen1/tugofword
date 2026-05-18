@@ -35,6 +35,14 @@
           <button id="new-pair-btn" class="icon-btn" title="New target pair (↻)">↻ New pair</button>
         </header>
 
+        <p class="instructions">
+          Type a word that's <strong>close in meaning to your target</strong> but
+          <strong>far from your opponent's</strong>. Pull the rope until the other cat falls in!
+        </p>
+
+        <!-- Turn indicator (hidden in vs-AI mode, shown in 2-player mode) -->
+        <div id="turn-indicator" class="turn-indicator" hidden></div>
+
         <!-- Arena: cats on a rope above a pit -->
         <div class="arena" id="arena" style="--rope-pos: 0;">
           <svg class="arena-svg" viewBox="0 0 1000 320" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
@@ -119,12 +127,30 @@
           <li>No morphological duplicates — if "ocean" has been played, you can't play "oceans" or "oceanic".</li>
           <li>Two cats. One pit. May the better word win.</li>
         </ul>
+        <h3>2-player mode</h3>
+        <p>
+          Switch to <strong>2 players (local)</strong> in Settings to play head-to-head
+          on the same screen — pass the keyboard each turn. P1 controls the black cat,
+          P2 controls the orange one.
+        </p>
       </div>
     </section>
 
     <!-- ============ SETTINGS TAB ============ -->
     <section id="tab-settings" class="tab">
       <div class="game-container prose">
+        <h2>Game mode</h2>
+        <form id="mode-form">
+          <label class="mode-option">
+            <input type="radio" name="mode" value="ai" checked />
+            <span><strong>vs AI</strong> — play against Gemini</span>
+          </label>
+          <label class="mode-option">
+            <input type="radio" name="mode" value="2p" />
+            <span><strong>2 players (local)</strong> — take turns at the same screen</span>
+          </label>
+        </form>
+
         <h2>Custom target pair</h2>
         <p>Start a game with your own two target words.</p>
         <form id="custom-pair-form">

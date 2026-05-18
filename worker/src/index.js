@@ -52,10 +52,16 @@ function applyMove(state, who, word, pull) {
   //   negative = toward AI     (right)
   // So we add it directly regardless of who played the word.
   // A "bad" word by either player produces the appropriate-signed pull naturally.
+  //
+  // `who` is one of: "player" | "ai" (single-player mode)
+  //                  "p1"     | "p2" (2-player local mode)
+  // Round increments after the "right-side" player ("ai" or "p2") so a
+  // full round always consists of both sides playing.
+  const rightSidePlayer = (who === "ai" || who === "p2");
   const newState = {
     ...state,
     ropePos: Math.max(-1, Math.min(1, state.ropePos + pull)),
-    round: state.round + (who === "ai" ? 1 : 0), // round increments after AI plays
+    round: state.round + (rightSidePlayer ? 1 : 0),
     playedStems: [...state.playedStems, stem(word)],
     history: [...state.history, { who, word, pull }]
   };
@@ -63,11 +69,14 @@ function applyMove(state, who, word, pull) {
   newState.pitHalfWidth = pitHalfWidthFor(newState.round);
 
   const t = newState.threshold;
+  // Winner is named generically as "left" / "right" by which side of the
+  // arena pulled the rope across the threshold. The client maps these
+  // back to "player"/"ai" or "p1"/"p2" based on its mode for UI strings.
   if (newState.ropePos >= t) {
-    return { ...newState, gameOver: true, winner: "player" };
+    return { ...newState, gameOver: true, winner: "left" };
   }
   if (newState.ropePos <= -t) {
-    return { ...newState, gameOver: true, winner: "ai" };
+    return { ...newState, gameOver: true, winner: "right" };
   }
   return newState;
 }
@@ -96,8 +105,10 @@ async function handleNewGame(body) {
 }
 
 async function handleSubmit(body, env) {
-  const { word, gameState } = body;
+  const { word, gameState, role = "player" } = body;
   if (!word || !gameState) return json({ error: "word and gameState required" }, 400);
+  // Accept the legacy "player" role plus "p1"/"p2" for 2-player mode.
+  const safeRole = ["player", "p1", "p2"].includes(role) ? role : "player";
 
   const w = String(word).toLowerCase().trim();
 
@@ -113,7 +124,7 @@ async function handleSubmit(body, env) {
   }
 
   const pull = await scorePull(w, gameState.playerTarget, gameState.aiTarget, env);
-  const newGameState = applyMove(gameState, "player", w, pull);
+  const newGameState = applyMove(gameState, safeRole, w, pull);
 
   return json({
     valid: true,

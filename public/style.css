@@ -147,6 +147,62 @@ main { padding: 14px 12px env(safe-area-inset-bottom); }
 }
 
 /* =========================================================
+   Instructions blurb (above arena on Game tab)
+   ========================================================= */
+.instructions {
+  font-size: 0.92rem;
+  color: var(--accent-deep);
+  opacity: 0.85;
+  text-align: center;
+  max-width: 620px;
+  margin: 4px auto 10px;
+  line-height: 1.4;
+}
+.instructions strong { color: var(--ink); }
+
+/* =========================================================
+   Turn indicator (2-player mode)
+   ========================================================= */
+.turn-indicator {
+  text-align: center;
+  font-weight: 800;
+  font-size: 1.05rem;
+  padding: 8px 14px;
+  border-radius: 999px;
+  margin: 2px auto 10px;
+  width: max-content;
+  background: var(--paper);
+  border: 2px solid var(--paper-edge);
+  box-shadow: var(--shadow);
+  animation: turn-pulse 1.6s ease-in-out infinite;
+}
+.turn-indicator[hidden] { display: none; }
+.turn-indicator.p1-turn { color: #1a1a1a; border-color: #555; }
+.turn-indicator.p2-turn { color: #c25c10; border-color: #e89060; }
+@keyframes turn-pulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.04); }
+}
+
+/* =========================================================
+   Mode selector (Settings tab)
+   ========================================================= */
+#mode-form { display: flex; flex-direction: column; gap: 8px; margin: 10px 0 18px; }
+.mode-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: #fff;
+  border: 2px solid var(--paper-edge);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+.mode-option:hover { border-color: var(--accent); }
+.mode-option input[type="radio"] { accent-color: var(--accent); transform: scale(1.2); }
+
+/* =========================================================
    Arena (SVG)
    ========================================================= */
 .arena {
@@ -462,6 +518,10 @@ main { padding: 14px 12px env(safe-area-inset-bottom); }
   #word-input { font-size: 16px; /* prevent iOS zoom */ }
   :root { --arena-shift: 6vw; }
   .history { max-height: 140px; }
+  .instructions { font-size: 0.85rem; }
+}
+@media (max-width: 380px) {
+  .instructions { display: none; } /* save vertical room on tiny screens */
 }
 
 /* Reduced motion */

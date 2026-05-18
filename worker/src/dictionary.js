@@ -39,7 +39,13 @@ const COMMON_WORDS = new Set([
   "pasta","soup","stew","pie","cookie","candy","fruit","apple","orange","banana",
   "grape","berry","peach","pear","plum","lemon","lime","cherry","melon","mango",
   "vegetable","carrot","potato","onion","garlic","tomato","pepper","corn","bean",
-  "pea","nut","seed","root","stem","branch","bark","trunk","petal","thorn"
+  "pea","nut","seed","root","stem","branch","bark","trunk","petal","thorn",
+  // Days, months, common proper-noun-ish words that dictionaryapi.dev
+  // returns 404 for (it treats these as proper nouns, not lemmas).
+  "monday","tuesday","wednesday","thursday","friday","saturday","sunday",
+  "january","february","march","april","may","june","july","august",
+  "september","october","november","december",
+  "weekday","weekend","holiday","birthday","anniversary","weekend"
 ]);
 
 const cache = new Map();
@@ -56,12 +62,21 @@ export async function isRealWord(word) {
       `https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(w)}`,
       { signal: AbortSignal.timeout(2500) }
     );
-    const ok = r.ok;
-    cache.set(w, ok);
-    return ok;
+    if (r.ok) { cache.set(w, true); return true; }
+    // 404 fallback: dictionaryapi.dev misses many proper nouns, technical
+    // terms, and less-common words ("monday", "october", etc.). Accept
+    // any word-shaped string (already validated /^[a-z]+$/, 3-15 letters)
+    // — the stem-collision check still prevents the main exploit. The
+    // worst case is the player gets credit for a non-word; the scoring
+    // model will give it a meaningful or junk embedding either way.
+    if (r.status === 404 && w.length >= 3 && w.length <= 15) {
+      cache.set(w, true);
+      return true;
+    }
+    cache.set(w, false);
+    return false;
   } catch {
     // Network/timeout: be permissive rather than block the game.
-    // Stem-based duplicate detection still prevents the main exploit.
     return true;
   }
 }

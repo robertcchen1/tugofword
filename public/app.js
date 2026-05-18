@@ -7,7 +7,20 @@ import { playPositive, playNegative, playWin, playLose } from "./sounds.js";
 // =========================================================
 const API_KEY_STORAGE = "tugofword:apiEndpoint";
 const SEEN_KEY        = "tugofword:seenPairs";
+const MODE_KEY        = "tugofword:mode";        // "ai" | "2p"
 const TOTAL_PAIRS     = 100;
+
+// =========================================================
+// Game mode (vs AI or 2-player local)
+// =========================================================
+let mode = localStorage.getItem(MODE_KEY) || "ai";
+let currentRole = "p1"; // whose turn in 2P mode; ignored in AI mode
+
+function setMode(m) {
+  mode = (m === "2p") ? "2p" : "ai";
+  localStorage.setItem(MODE_KEY, mode);
+  document.body.dataset.mode = mode;
+}
 
 function apiBase() {
   const saved = localStorage.getItem(API_KEY_STORAGE);
@@ -156,11 +169,18 @@ function renderState(s) {
 function renderMove(who, word, pull) {
   const list = document.getElementById("history");
   const li = document.createElement("li");
-  li.className = who;
+  // Map role to CSS class (left side = "player" styling, right side = "ai" styling).
+  const sideClass = (who === "player" || who === "p1") ? "player"
+                  : (who === "ai"     || who === "p2") ? "ai"
+                  : who;
+  li.className = sideClass;
   const pullCls = pull > 0 ? "pull-pos" : "pull-neg";
   const sign    = pull > 0 ? "+" : "";
-  const who_    = who === "player" ? "You" : "AI";
-  li.innerHTML = `<span><strong>${who_}:</strong> ${escapeHtml(word)}</span>
+  const label   = ({
+    "player": "You", "ai": "AI",
+    "p1": "P1",      "p2": "P2"
+  })[who] || who;
+  li.innerHTML = `<span><strong>${label}:</strong> ${escapeHtml(word)}</span>
                   <span class="${pullCls}">${sign}${pull.toFixed(3)}</span>`;
   list.prepend(li);
 }
@@ -208,7 +228,10 @@ async function newGame({ customPair } = {}) {
     document.querySelector(".cat-orange-pos").classList.remove("falling");
     document.querySelector(".cat-black-wrap").classList.remove("cheering");
     document.querySelector(".cat-orange-wrap").classList.remove("cheering");
+    document.getElementById("word-input").value = "";
+    currentRole = "p1"; // 2P always starts with P1
     renderState(s);
+    updateTurnIndicator();
     rememberPair(s.playerTarget, s.aiTarget);
     setInputDisabled(false);
     document.getElementById("word-input").focus();
@@ -228,32 +251,52 @@ async function submitWord(word) {
   setInputDisabled(true);
   feedback("Scoring…");
   try {
-    const res = await api("/api/submit", { word, gameState: state });
+    // In AI mode the player is always the left side ("player" legacy role).
+    // In 2P mode, currentRole alternates p1/p2 between submits.
+    const role = (mode === "2p") ? currentRole : "player";
+    const res = await api("/api/submit", { word, gameState: state, role });
+
     if (!res.valid) {
       feedback(res.reason, "error");
       playNegative();
       setInputDisabled(false);
-      document.getElementById("word-input").select();
+      document.getElementById("word-input").select(); // keep text, select it for retyping
       return;
     }
 
-    // Player's pull
+    // Clear input as soon as the submit is accepted — covers game-over paths
+    // and the normal turn-end path. Invalid words above keep the text.
+    document.getElementById("word-input").value = "";
+
+    // Render this player's pull
     renderState(res.newGameState);
-    renderMove("player", word, res.pull);
+    renderMove(role, word, res.pull);
     pulseCats(res.pull);
     res.pull > 0 ? playPositive() : playNegative();
-    feedback(`You pulled ${res.pull > 0 ? "+" : ""}${res.pull.toFixed(3)}`,
+    const who = (mode === "2p")
+      ? (role === "p1" ? "P1" : "P2")
+      : "You";
+    feedback(`${who} pulled ${res.pull > 0 ? "+" : ""}${res.pull.toFixed(3)}`,
              res.pull > 0 ? "positive" : "negative");
 
     if (res.gameOver) return endGame(res.winner);
 
-    // AI turn
+    // === Branch: AI mode vs 2P mode ===
+    if (mode === "2p") {
+      // Hand off to the other player.
+      currentRole = (currentRole === "p1") ? "p2" : "p1";
+      updateTurnIndicator();
+      setInputDisabled(false);
+      document.getElementById("word-input").focus();
+      return;
+    }
+
+    // AI mode — let Gemini take a turn
     await new Promise(r => setTimeout(r, 850));
     feedback("AI thinking…");
     const aiRes = await api("/api/ai-move", { gameState: res.newGameState });
     renderState(aiRes.newGameState);
     renderMove("ai", aiRes.word, aiRes.pull);
-    // From AI's perspective the pull is negative for player; positive feedback for AI = negative pull
     pulseCats(aiRes.pull);
     aiRes.pull < 0 ? playPositive() : playNegative();
     feedback(`AI played "${aiRes.word}" (${aiRes.pull > 0 ? "+" : ""}${aiRes.pull.toFixed(3)})`,
@@ -262,7 +305,6 @@ async function submitWord(word) {
     if (aiRes.gameOver) return endGame(aiRes.winner);
 
     setInputDisabled(false);
-    document.getElementById("word-input").value = "";
     document.getElementById("word-input").focus();
   } catch (err) {
     feedback(err.message, "error");
@@ -270,13 +312,30 @@ async function submitWord(word) {
   }
 }
 
+// Show whose turn it is in 2P mode (hidden in AI mode — feedback line handles
+// the AI-thinking text there).
+function updateTurnIndicator() {
+  const el = document.getElementById("turn-indicator");
+  if (!el) return;
+  if (mode === "2p") {
+    const isP1 = currentRole === "p1";
+    el.textContent = isP1 ? "🐈‍⬛ P1's turn" : "🐈 P2's turn";
+    el.className = "turn-indicator " + (isP1 ? "p1-turn" : "p2-turn");
+    el.hidden = false;
+  } else {
+    el.hidden = true;
+  }
+}
+
 function endGame(winner) {
-  const playerWon = winner === "player";
+  // Backend returns "left" (black/player/P1 side) or "right" (orange/AI/P2 side).
+  // Legacy values ("player"/"ai") are mapped for backwards compatibility.
+  const leftWon = (winner === "left" || winner === "player");
   const blackWrap  = document.querySelector(".cat-black-wrap");
   const orangeWrap = document.querySelector(".cat-orange-wrap");
   const blackPos   = document.querySelector(".cat-black-pos");
   const orangePos  = document.querySelector(".cat-orange-pos");
-  if (playerWon) {
+  if (leftWon) {
     orangePos.classList.add("falling");
     blackWrap.classList.add("cheering");
     playWin();
@@ -286,13 +345,24 @@ function endGame(winner) {
     playLose();
   }
 
+  // Clear input — covers the case where a player typed and submitted the
+  // winning word so the box doesn't carry it into the next game.
+  document.getElementById("word-input").value = "";
+
   setTimeout(() => {
-    document.getElementById("game-over-title").textContent =
-      playerWon ? "🎉 You win!" : "😿 The orange cat wins!";
-    document.getElementById("game-over-subtitle").textContent =
-      playerWon
+    const titleEl = document.getElementById("game-over-title");
+    const subEl   = document.getElementById("game-over-subtitle");
+    if (mode === "2p") {
+      titleEl.textContent = leftWon ? "🎉 P1 wins!" : "🎉 P2 wins!";
+      subEl.textContent = leftWon
+        ? `P1's "${state.playerTarget}" cat pulled the orange cat into the pit.`
+        : `P2's "${state.aiTarget}" cat pulled the black cat into the pit.`;
+    } else {
+      titleEl.textContent = leftWon ? "🎉 You win!" : "😿 The orange cat wins!";
+      subEl.textContent = leftWon
         ? `Your "${state.playerTarget}" cat pulled the orange cat into the pit.`
         : `Your "${state.playerTarget}" cat fell in — the AI's "${state.aiTarget}" was stronger.`;
+    }
     document.getElementById("game-over").hidden = false;
   }, 1200);
 }
@@ -340,8 +410,21 @@ document.getElementById("api-endpoint-form").addEventListener("submit", e => {
   toast(v ? `API: ${v}` : "API: same origin");
 });
 
+// Mode radio buttons (vs AI / 2 players local)
+document.querySelectorAll('input[name="mode"]').forEach(radio => {
+  radio.addEventListener("change", () => {
+    if (!radio.checked) return;
+    setMode(radio.value);
+    toast(mode === "2p" ? "2-player mode — pass the keyboard each turn" : "Single-player vs AI");
+    newGame(); // fresh game whenever mode changes
+  });
+});
+
 // Pre-populate settings inputs
 document.getElementById("api-endpoint").value = localStorage.getItem(API_KEY_STORAGE) || "";
+const initialRadio = document.querySelector(`input[name="mode"][value="${mode}"]`);
+if (initialRadio) initialRadio.checked = true;
+document.body.dataset.mode = mode;
 
 // =========================================================
 // Load SVG sprite sheet then start
