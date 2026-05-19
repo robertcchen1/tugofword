@@ -64,15 +64,26 @@
             <text class="imbalance-label" x="500" y="78"
                   text-anchor="middle" dominant-baseline="middle">rope position</text>
 
-            <!-- Pit (rx animates with sudden death) -->
-            <ellipse class="pit" cx="500" cy="240" rx="40" ry="20" />
+            <!-- Pit: clip-pathed image of a top-down dirt hole in grass.
+                 The .pit ellipse (which JS scales via rx) acts as the clip
+                 mask, so the image always crops to the current pit shape.
+                 .pit-inner is kept as a darker overlay for extra depth. -->
+            <defs>
+              <clipPath id="pit-clip">
+                <ellipse class="pit" cx="500" cy="240" rx="40" ry="20" />
+              </clipPath>
+            </defs>
+            <image class="pit-image" href="img/pit.png"
+                   x="220" y="170" width="560" height="180"
+                   preserveAspectRatio="xMidYMid slice"
+                   clip-path="url(#pit-clip)" />
             <ellipse class="pit-inner" cx="500" cy="240" rx="36" ry="16" />
 
-            <!-- Rope + knot wrapped so they slide with the cats (SVG
-                 transform attribute set by JS, same shift as .cat-pos).
-                 The rope stays attached to both cats at all times. -->
+            <!-- Rope + knot wrapped so they slide with the cats. -->
             <g class="rope-wrap" transform="translate(0 0)">
-              <line class="rope" x1="340" y1="200" x2="660" y2="200" />
+              <image class="rope-img" href="img/rope.png"
+                     x="320" y="186" width="360" height="28"
+                     preserveAspectRatio="none" />
               <circle class="rope-knot" cx="500" cy="200" r="9" />
             </g>
 
