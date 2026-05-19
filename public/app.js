@@ -413,13 +413,17 @@ document.getElementById("api-endpoint-form").addEventListener("submit", e => {
   toast(v ? `API: ${v}` : "API: same origin");
 });
 
-// Mode radio buttons (vs AI / 2 players local)
+// Mode radio buttons (vs AI / 2 players local).
+// Toggling mode preserves the current game (same pair, same rope position).
+// In 2P mode we reset whose-turn to P1 so the next submit comes from the
+// human who already controls the keyboard.
 document.querySelectorAll('input[name="mode"]').forEach(radio => {
   radio.addEventListener("change", () => {
     if (!radio.checked) return;
     setMode(radio.value);
+    if (mode === "2p") currentRole = "p1";
+    updateTurnIndicator();
     toast(mode === "2p" ? "2-player mode — pass the keyboard each turn" : "Single-player vs AI");
-    newGame(); // fresh game whenever mode changes
   });
 });
 
