@@ -2,6 +2,10 @@
 node_modules/
 npm-debug.log*
 
+# Wrangler local state
+.wrangler/
+worker/.wrangler/
+
 # Environment
 .env
 .env.local

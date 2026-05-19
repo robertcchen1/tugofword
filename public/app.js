@@ -128,9 +128,12 @@ function renderState(s) {
   // ---- Pit width ----
   // pitHalfWidth from backend is a fraction of TOTAL arena (0.04..0.18 typical).
   // In viewBox: pitRx = pitHalfWidth * 1000 → pit spans (500 - pitRx)..(500 + pitRx).
+  // Layered ellipses (rim → rim-2 → main → inner) all scale together for depth.
   const pitRx = s.pitHalfWidth * 1000;
+  arena.querySelector(".pit-rim").setAttribute("rx", pitRx + 8);
+  arena.querySelector(".pit-rim-2").setAttribute("rx", pitRx + 4);
   arena.querySelector(".pit").setAttribute("rx", pitRx);
-  arena.querySelector(".pit-inner").setAttribute("rx", Math.max(0, pitRx - 4));
+  arena.querySelector(".pit-inner").setAttribute("rx", Math.max(0, pitRx - 8));
 
   // ---- Cat positions (SVG transform attribute, in viewBox units) ----
   // Goal: when |ropePos| = threshold (game ends), the LOSING cat's center

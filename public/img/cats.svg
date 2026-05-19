@@ -1,111 +1,203 @@
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none">
   <!-- ===========================================================
-       Cat sprite sheet.
+       Cat sprite sheet — polished vector illustrations.
 
-       The active #cat-black / #cat-orange symbols use the AI-generated
-       PNG art (1024×1024) scaled into a 120×160 viewBox. The original
-       hand-authored primitive-shape cats are kept below as
-       #cat-black-vector / #cat-orange-vector — a safety fallback if a
-       PNG ever fails to load, or for users who prefer the vector look.
-
-       Both PNGs render with `preserveAspectRatio="xMidYMid meet"` so
-       the image fits within the 120×160 box without distortion. The
-       cream-on-cream PNG backgrounds visually blend into the parchment
-       arena since the body background uses a matching palette.
+       Both cats use a 120×160 viewBox so all existing JS positioning
+       maths in app.js keeps working unchanged. Each cat is built from
+       bezier paths (not basic ellipses) with subtle gradient shading,
+       fur-texture detail strokes, expressive almond eyes with vertical
+       slit pupils, pink noses + ears, and whiskers. Both face inward
+       toward the rope (black cat right, orange cat left via mirror).
        =========================================================== -->
 
-  <!-- ============ BLACK CAT (PNG) ============ -->
+  <defs>
+    <!-- Black cat body gradient: charcoal with subtle highlight on top-right -->
+    <radialGradient id="black-body-grad" cx="0.35" cy="0.3" r="0.9">
+      <stop offset="0%"   stop-color="#3a3530" />
+      <stop offset="55%"  stop-color="#252118" />
+      <stop offset="100%" stop-color="#15110b" />
+    </radialGradient>
+    <!-- Orange cat body gradient: warm orange with deeper shadow on the bottom -->
+    <radialGradient id="orange-body-grad" cx="0.35" cy="0.3" r="0.95">
+      <stop offset="0%"   stop-color="#f08a3a" />
+      <stop offset="55%"  stop-color="#d96c2c" />
+      <stop offset="100%" stop-color="#a44a18" />
+    </radialGradient>
+    <!-- Soft white chest tuft / belly fur -->
+    <radialGradient id="white-tuft-grad" cx="0.5" cy="0.4" r="0.7">
+      <stop offset="0%"   stop-color="#fffaf0" />
+      <stop offset="80%"  stop-color="#f0e5d0" />
+      <stop offset="100%" stop-color="#e8d8b8" />
+    </radialGradient>
+    <!-- Eye gradient: vivid green with darker rim -->
+    <radialGradient id="eye-grad" cx="0.4" cy="0.35" r="0.8">
+      <stop offset="0%"   stop-color="#a8e070" />
+      <stop offset="60%"  stop-color="#6fbf5b" />
+      <stop offset="100%" stop-color="#3d8a30" />
+    </radialGradient>
+    <!-- Pink nose / inner ear gradient -->
+    <radialGradient id="pink-grad" cx="0.5" cy="0.3" r="0.7">
+      <stop offset="0%"   stop-color="#ffc4c4" />
+      <stop offset="100%" stop-color="#e88a8a" />
+    </radialGradient>
+  </defs>
+
+  <!-- ============================================================
+       BLACK CAT — facing right, paws on rope
+       viewBox 0 0 120 160
+       ============================================================ -->
   <symbol id="cat-black" viewBox="0 0 120 160">
-    <image href="img/cat-black.png" x="-10" y="0" width="140" height="160"
-           preserveAspectRatio="xMidYMid meet" />
+    <!-- Tail curling up behind the body -->
+    <path d="M 28 110 Q 6 100 6 70 Q 8 42 26 38 Q 32 42 30 50 Q 18 55 16 72 Q 17 90 32 100 Z"
+          fill="url(#black-body-grad)" />
+    <!-- Back left leg / hip -->
+    <path d="M 38 138 Q 33 152 40 156 Q 50 156 50 144 Q 48 134 42 132 Z"
+          fill="url(#black-body-grad)" />
+    <!-- Back right leg / hip -->
+    <path d="M 70 138 Q 75 152 82 154 Q 92 152 90 142 Q 86 132 78 132 Z"
+          fill="url(#black-body-grad)" />
+    <!-- White socks on back paws -->
+    <ellipse cx="42" cy="153" rx="7" ry="4" fill="url(#white-tuft-grad)" />
+    <ellipse cx="84" cy="151" rx="7" ry="4" fill="url(#white-tuft-grad)" />
+    <!-- Main body: rounded pear shape -->
+    <path d="M 30 110 Q 22 80 38 62 Q 60 50 82 62 Q 96 80 92 110 Q 92 142 60 144 Q 28 142 30 110 Z"
+          fill="url(#black-body-grad)" />
+    <!-- White chest + belly tuft (irregular cloud shape) -->
+    <path d="M 45 90 Q 52 82 60 84 Q 68 82 75 90 Q 78 110 74 128 Q 60 140 46 128 Q 42 110 45 90 Z"
+          fill="url(#white-tuft-grad)" />
+    <!-- Front paws holding rope (right side of body) -->
+    <path d="M 88 96 Q 100 92 104 100 Q 104 110 96 112 Q 88 110 86 102 Z"
+          fill="url(#black-body-grad)" transform="rotate(-18 95 102)" />
+    <path d="M 90 110 Q 102 108 106 116 Q 105 124 96 126 Q 88 124 88 116 Z"
+          fill="url(#black-body-grad)" transform="rotate(-8 96 118)" />
+    <!-- White on front paw tips -->
+    <ellipse cx="100" cy="108" rx="5" ry="3.5" fill="url(#white-tuft-grad)" transform="rotate(-18 100 108)" />
+    <ellipse cx="102" cy="122" rx="5" ry="3.5" fill="url(#white-tuft-grad)" transform="rotate(-8 102 122)" />
+    <!-- Subtle fur shading lines on side of body -->
+    <path d="M 32 90 Q 35 110 36 130" stroke="#000" stroke-width="0.6" fill="none" opacity="0.3" />
+    <path d="M 26 75 Q 29 95 30 115" stroke="#000" stroke-width="0.5" fill="none" opacity="0.2" />
+    <!-- Head: large round with subtle cheek puff -->
+    <path d="M 26 56 Q 24 36 36 26 Q 50 18 60 18 Q 72 18 84 26 Q 92 38 90 56 Q 90 76 76 84 Q 60 90 44 84 Q 28 76 26 56 Z"
+          fill="url(#black-body-grad)" />
+    <!-- Ears (triangular outer with fur tufts) -->
+    <path d="M 30 32 L 22 6 Q 28 12 42 24 Z" fill="url(#black-body-grad)" />
+    <path d="M 86 32 L 94 6 Q 88 12 74 24 Z" fill="url(#black-body-grad)" />
+    <!-- Tiny ear-tip fur tufts -->
+    <path d="M 23 8 L 25 4 L 27 9 Z" fill="#3a3530" />
+    <path d="M 93 8 L 91 4 L 89 9 Z" fill="#3a3530" />
+    <!-- Inner ear pink -->
+    <path d="M 32 28 L 28 14 Q 33 19 40 24 Z" fill="url(#pink-grad)" opacity="0.85" />
+    <path d="M 84 28 L 88 14 Q 83 19 76 24 Z" fill="url(#pink-grad)" opacity="0.85" />
+    <!-- Eyes — almond shape, vivid green, slit pupils, white highlight -->
+    <ellipse cx="44" cy="52" rx="6.5" ry="8" fill="url(#eye-grad)" />
+    <ellipse cx="72" cy="52" rx="6.5" ry="8" fill="url(#eye-grad)" />
+    <!-- Slit pupils -->
+    <ellipse cx="44" cy="53" rx="1.6" ry="6" fill="#0a0a0a" />
+    <ellipse cx="72" cy="53" rx="1.6" ry="6" fill="#0a0a0a" />
+    <!-- Eye highlights for life -->
+    <circle cx="46.5" cy="48" r="1.4" fill="#ffffff" />
+    <circle cx="74.5" cy="48" r="1.4" fill="#ffffff" />
+    <!-- Eye outline for definition -->
+    <path d="M 38 50 Q 44 44 50 50" stroke="#0a0a0a" stroke-width="0.7" fill="none" opacity="0.6" />
+    <path d="M 66 50 Q 72 44 78 50" stroke="#0a0a0a" stroke-width="0.7" fill="none" opacity="0.6" />
+    <!-- Nose: small pink triangle with downturn -->
+    <path d="M 54 64 Q 58 62 62 64 L 58 70 Z" fill="url(#pink-grad)" />
+    <!-- Mouth: subtle Y -->
+    <path d="M 58 70 L 58 73" stroke="#0a0a0a" stroke-width="0.8" />
+    <path d="M 58 73 Q 54 76 50 74" stroke="#0a0a0a" stroke-width="0.9" fill="none" stroke-linecap="round" />
+    <path d="M 58 73 Q 62 76 66 74" stroke="#0a0a0a" stroke-width="0.9" fill="none" stroke-linecap="round" />
+    <!-- Whiskers — 3 on each side, slightly curved -->
+    <path d="M 38 66 Q 28 65 18 62" stroke="#aaa" stroke-width="0.6" fill="none" />
+    <path d="M 38 69 Q 28 70 16 70" stroke="#aaa" stroke-width="0.6" fill="none" />
+    <path d="M 38 72 Q 28 74 18 78" stroke="#aaa" stroke-width="0.6" fill="none" />
+    <path d="M 78 66 Q 88 65 98 62" stroke="#aaa" stroke-width="0.6" fill="none" />
+    <path d="M 78 69 Q 88 70 100 70" stroke="#aaa" stroke-width="0.6" fill="none" />
+    <path d="M 78 72 Q 88 74 98 78" stroke="#aaa" stroke-width="0.6" fill="none" />
   </symbol>
 
-  <!-- ============ ORANGE CAT (PNG, mirrored so it faces left toward rope) ============ -->
+  <!-- ============================================================
+       ORANGE TABBY CAT — facing left (mirrored), paws on rope
+       Built once facing right, then mirrored via outer scale(-1, 1).
+       ============================================================ -->
   <symbol id="cat-orange" viewBox="0 0 120 160">
     <g transform="translate(120 0) scale(-1 1)">
-      <image href="img/cat-orange.png" x="-10" y="0" width="140" height="160"
-             preserveAspectRatio="xMidYMid meet" />
-    </g>
-  </symbol>
-
-  <!-- ============ BLACK CAT vector (fallback) ============ -->
-  <symbol id="cat-black-vector" viewBox="0 0 120 160">
-    <!-- Tail (curls behind) -->
-    <path d="M 30 100 Q 5 90 8 60 Q 12 35 30 40"
-          fill="none" stroke="#1a1a1a" stroke-width="9" stroke-linecap="round"/>
-    <!-- Body (chubby ellipse) -->
-    <ellipse cx="60" cy="100" rx="34" ry="38" fill="#1a1a1a"/>
-    <!-- Back legs -->
-    <ellipse cx="42" cy="138" rx="10" ry="14" fill="#1a1a1a"/>
-    <ellipse cx="78" cy="138" rx="10" ry="14" fill="#1a1a1a"/>
-    <!-- Front paws on rope (right side, gripping) -->
-    <ellipse cx="90" cy="92" rx="9" ry="11" fill="#1a1a1a" transform="rotate(-25 90 92)"/>
-    <ellipse cx="92" cy="105" rx="9" ry="11" fill="#1a1a1a" transform="rotate(-15 92 105)"/>
-    <!-- Head -->
-    <circle cx="58" cy="56" r="30" fill="#1a1a1a"/>
-    <!-- Ears -->
-    <path d="M 36 38 L 28 18 L 48 30 Z" fill="#1a1a1a"/>
-    <path d="M 80 38 L 88 18 L 68 30 Z" fill="#1a1a1a"/>
-    <path d="M 39 34 L 36 24 L 45 30 Z" fill="#ff9aa2" opacity="0.7"/>
-    <path d="M 77 34 L 80 24 L 71 30 Z" fill="#ff9aa2" opacity="0.7"/>
-    <!-- Eyes (green, with vertical slit pupils — per user spec) -->
-    <ellipse cx="48" cy="54" rx="5" ry="6" fill="#6fbf5b"/>
-    <ellipse cx="68" cy="54" rx="5" ry="6" fill="#6fbf5b"/>
-    <ellipse cx="48" cy="55" rx="1.8" ry="4" fill="#1a1a1a"/>
-    <ellipse cx="68" cy="55" rx="1.8" ry="4" fill="#1a1a1a"/>
-    <!-- White chest tuft -->
-    <path d="M 50 80 Q 60 73 70 80 Q 65 95 60 96 Q 55 95 50 80 Z"
-          fill="#f4ede0" />
-    <!-- Nose -->
-    <path d="M 56 64 L 60 68 L 64 64 Z" fill="#ff9aa2"/>
-    <!-- Mouth (determined) -->
-    <path d="M 60 68 Q 55 73 51 71" fill="none" stroke="#0a0a0a" stroke-width="1.5" stroke-linecap="round"/>
-    <path d="M 60 68 Q 65 73 69 71" fill="none" stroke="#0a0a0a" stroke-width="1.5" stroke-linecap="round"/>
-    <!-- Whiskers -->
-    <line x1="40" y1="66" x2="22" y2="62" stroke="#666" stroke-width="0.8"/>
-    <line x1="40" y1="70" x2="22" y2="72" stroke="#666" stroke-width="0.8"/>
-    <line x1="76" y1="66" x2="94" y2="62" stroke="#666" stroke-width="0.8"/>
-    <line x1="76" y1="70" x2="94" y2="72" stroke="#666" stroke-width="0.8"/>
-  </symbol>
-
-  <!-- ============ ORANGE TABBY CAT vector (fallback) ============ -->
-  <symbol id="cat-orange-vector" viewBox="0 0 120 160">
-    <g transform="translate(120 0) scale(-1 1)">
-      <path d="M 30 100 Q 5 90 8 60 Q 12 35 30 40"
-            fill="none" stroke="#e8772e" stroke-width="9" stroke-linecap="round"/>
-      <ellipse cx="60" cy="100" rx="34" ry="38" fill="#e8772e"/>
-      <ellipse cx="50" cy="85" rx="20" ry="3" fill="#b85a1a" opacity="0.6"/>
-      <ellipse cx="55" cy="100" rx="22" ry="3" fill="#b85a1a" opacity="0.6"/>
-      <ellipse cx="55" cy="115" rx="20" ry="3" fill="#b85a1a" opacity="0.6"/>
-      <ellipse cx="55" cy="128" rx="16" ry="3" fill="#b85a1a" opacity="0.6"/>
-      <ellipse cx="14" cy="55" rx="3" ry="6" fill="#b85a1a" opacity="0.7"/>
-      <ellipse cx="10" cy="75" rx="3" ry="6" fill="#b85a1a" opacity="0.7"/>
-      <ellipse cx="42" cy="138" rx="10" ry="14" fill="#e8772e"/>
-      <ellipse cx="78" cy="138" rx="10" ry="14" fill="#e8772e"/>
-      <ellipse cx="90" cy="92" rx="9" ry="11" fill="#e8772e" transform="rotate(-25 90 92)"/>
-      <ellipse cx="92" cy="105" rx="9" ry="11" fill="#e8772e" transform="rotate(-15 92 105)"/>
-      <circle cx="58" cy="56" r="30" fill="#e8772e"/>
-      <path d="M 45 38 L 50 48 L 55 38 L 60 48 L 65 38 L 70 48 L 75 38"
-            fill="none" stroke="#b85a1a" stroke-width="2" opacity="0.7"/>
-      <line x1="35" y1="60" x2="42" y2="62" stroke="#b85a1a" stroke-width="2" opacity="0.6"/>
-      <line x1="35" y1="68" x2="42" y2="68" stroke="#b85a1a" stroke-width="2" opacity="0.6"/>
-      <line x1="78" y1="60" x2="85" y2="62" stroke="#b85a1a" stroke-width="2" opacity="0.6"/>
-      <line x1="78" y1="68" x2="85" y2="68" stroke="#b85a1a" stroke-width="2" opacity="0.6"/>
-      <path d="M 36 38 L 28 18 L 48 30 Z" fill="#e8772e"/>
-      <path d="M 80 38 L 88 18 L 68 30 Z" fill="#e8772e"/>
-      <path d="M 39 34 L 36 24 L 45 30 Z" fill="#ff9aa2" opacity="0.85"/>
-      <path d="M 77 34 L 80 24 L 71 30 Z" fill="#ff9aa2" opacity="0.85"/>
-      <ellipse cx="48" cy="54" rx="5" ry="6" fill="#5fb04f"/>
-      <ellipse cx="68" cy="54" rx="5" ry="6" fill="#5fb04f"/>
-      <ellipse cx="48" cy="55" rx="1.8" ry="4" fill="#0a0a0a"/>
-      <ellipse cx="68" cy="55" rx="1.8" ry="4" fill="#0a0a0a"/>
-      <path d="M 56 64 L 60 68 L 64 64 Z" fill="#ff9aa2"/>
-      <path d="M 60 68 Q 55 73 51 71" fill="none" stroke="#5a2a05" stroke-width="1.5" stroke-linecap="round"/>
-      <path d="M 60 68 Q 65 73 69 71" fill="none" stroke="#5a2a05" stroke-width="1.5" stroke-linecap="round"/>
-      <line x1="40" y1="66" x2="22" y2="62" stroke="#fff" stroke-width="0.8" opacity="0.7"/>
-      <line x1="40" y1="70" x2="22" y2="72" stroke="#fff" stroke-width="0.8" opacity="0.7"/>
-      <line x1="76" y1="66" x2="94" y2="62" stroke="#fff" stroke-width="0.8" opacity="0.7"/>
-      <line x1="76" y1="70" x2="94" y2="72" stroke="#fff" stroke-width="0.8" opacity="0.7"/>
+      <!-- Tail -->
+      <path d="M 28 110 Q 6 100 6 70 Q 8 42 26 38 Q 32 42 30 50 Q 18 55 16 72 Q 17 90 32 100 Z"
+            fill="url(#orange-body-grad)" />
+      <!-- Tail stripes -->
+      <path d="M 14 64 Q 18 62 22 66" stroke="#8a3f0e" stroke-width="2" fill="none" opacity="0.75" stroke-linecap="round" />
+      <path d="M 12 76 Q 16 74 20 78" stroke="#8a3f0e" stroke-width="2" fill="none" opacity="0.75" stroke-linecap="round" />
+      <path d="M 14 88 Q 18 86 22 90" stroke="#8a3f0e" stroke-width="2" fill="none" opacity="0.75" stroke-linecap="round" />
+      <!-- Back legs / hips -->
+      <path d="M 38 138 Q 33 152 40 156 Q 50 156 50 144 Q 48 134 42 132 Z" fill="url(#orange-body-grad)" />
+      <path d="M 70 138 Q 75 152 82 154 Q 92 152 90 142 Q 86 132 78 132 Z" fill="url(#orange-body-grad)" />
+      <!-- White socks on back paws -->
+      <ellipse cx="42" cy="153" rx="7" ry="4" fill="url(#white-tuft-grad)" />
+      <ellipse cx="84" cy="151" rx="7" ry="4" fill="url(#white-tuft-grad)" />
+      <!-- Main body -->
+      <path d="M 30 110 Q 22 80 38 62 Q 60 50 82 62 Q 96 80 92 110 Q 92 142 60 144 Q 28 142 30 110 Z"
+            fill="url(#orange-body-grad)" />
+      <!-- Tabby stripes on body (curved paths, not solid ellipses) -->
+      <path d="M 36 80 Q 42 75 48 80" stroke="#8a3f0e" stroke-width="2.5" fill="none" opacity="0.6" stroke-linecap="round" />
+      <path d="M 32 96 Q 42 90 52 96" stroke="#8a3f0e" stroke-width="2.5" fill="none" opacity="0.6" stroke-linecap="round" />
+      <path d="M 30 112 Q 42 106 54 112" stroke="#8a3f0e" stroke-width="2.5" fill="none" opacity="0.55" stroke-linecap="round" />
+      <path d="M 30 128 Q 42 122 54 128" stroke="#8a3f0e" stroke-width="2.5" fill="none" opacity="0.55" stroke-linecap="round" />
+      <path d="M 70 80 Q 76 75 82 80" stroke="#8a3f0e" stroke-width="2.5" fill="none" opacity="0.6" stroke-linecap="round" />
+      <path d="M 68 96 Q 78 90 86 96" stroke="#8a3f0e" stroke-width="2.5" fill="none" opacity="0.6" stroke-linecap="round" />
+      <!-- White chest + belly tuft -->
+      <path d="M 45 92 Q 52 84 60 86 Q 68 84 75 92 Q 78 112 74 130 Q 60 142 46 130 Q 42 112 45 92 Z"
+            fill="url(#white-tuft-grad)" />
+      <!-- Front paws holding rope -->
+      <path d="M 88 96 Q 100 92 104 100 Q 104 110 96 112 Q 88 110 86 102 Z"
+            fill="url(#orange-body-grad)" transform="rotate(-18 95 102)" />
+      <path d="M 90 110 Q 102 108 106 116 Q 105 124 96 126 Q 88 124 88 116 Z"
+            fill="url(#orange-body-grad)" transform="rotate(-8 96 118)" />
+      <!-- White paw tips -->
+      <ellipse cx="100" cy="108" rx="5" ry="3.5" fill="url(#white-tuft-grad)" transform="rotate(-18 100 108)" />
+      <ellipse cx="102" cy="122" rx="5" ry="3.5" fill="url(#white-tuft-grad)" transform="rotate(-8 102 122)" />
+      <!-- Head -->
+      <path d="M 26 56 Q 24 36 36 26 Q 50 18 60 18 Q 72 18 84 26 Q 92 38 90 56 Q 90 76 76 84 Q 60 90 44 84 Q 28 76 26 56 Z"
+            fill="url(#orange-body-grad)" />
+      <!-- Forehead M-stripe (classic tabby) -->
+      <path d="M 44 30 Q 48 38 52 30" stroke="#8a3f0e" stroke-width="2" fill="none" opacity="0.7" stroke-linecap="round" />
+      <path d="M 54 30 Q 58 38 62 30" stroke="#8a3f0e" stroke-width="2" fill="none" opacity="0.7" stroke-linecap="round" />
+      <path d="M 64 30 Q 68 38 72 30" stroke="#8a3f0e" stroke-width="2" fill="none" opacity="0.7" stroke-linecap="round" />
+      <!-- Cheek stripes -->
+      <path d="M 32 56 Q 38 58 40 60" stroke="#8a3f0e" stroke-width="1.6" fill="none" opacity="0.55" />
+      <path d="M 32 64 Q 38 64 40 66" stroke="#8a3f0e" stroke-width="1.6" fill="none" opacity="0.55" />
+      <path d="M 88 56 Q 82 58 80 60" stroke="#8a3f0e" stroke-width="1.6" fill="none" opacity="0.55" />
+      <path d="M 88 64 Q 82 64 80 66" stroke="#8a3f0e" stroke-width="1.6" fill="none" opacity="0.55" />
+      <!-- Ears -->
+      <path d="M 30 32 L 22 6 Q 28 12 42 24 Z" fill="url(#orange-body-grad)" />
+      <path d="M 86 32 L 94 6 Q 88 12 74 24 Z" fill="url(#orange-body-grad)" />
+      <!-- Inner ear pink -->
+      <path d="M 32 28 L 28 14 Q 33 19 40 24 Z" fill="url(#pink-grad)" />
+      <path d="M 84 28 L 88 14 Q 83 19 76 24 Z" fill="url(#pink-grad)" />
+      <!-- Eyes -->
+      <ellipse cx="44" cy="52" rx="6.5" ry="8" fill="url(#eye-grad)" />
+      <ellipse cx="72" cy="52" rx="6.5" ry="8" fill="url(#eye-grad)" />
+      <!-- Slit pupils -->
+      <ellipse cx="44" cy="53" rx="1.6" ry="6" fill="#0a0a0a" />
+      <ellipse cx="72" cy="53" rx="1.6" ry="6" fill="#0a0a0a" />
+      <!-- Eye highlights -->
+      <circle cx="46.5" cy="48" r="1.4" fill="#ffffff" />
+      <circle cx="74.5" cy="48" r="1.4" fill="#ffffff" />
+      <!-- Eye definition outlines -->
+      <path d="M 38 50 Q 44 44 50 50" stroke="#5a2a05" stroke-width="0.7" fill="none" opacity="0.6" />
+      <path d="M 66 50 Q 72 44 78 50" stroke="#5a2a05" stroke-width="0.7" fill="none" opacity="0.6" />
+      <!-- Nose -->
+      <path d="M 54 64 Q 58 62 62 64 L 58 70 Z" fill="url(#pink-grad)" />
+      <!-- Mouth -->
+      <path d="M 58 70 L 58 73" stroke="#5a2a05" stroke-width="0.8" />
+      <path d="M 58 73 Q 54 76 50 74" stroke="#5a2a05" stroke-width="0.9" fill="none" stroke-linecap="round" />
+      <path d="M 58 73 Q 62 76 66 74" stroke="#5a2a05" stroke-width="0.9" fill="none" stroke-linecap="round" />
+      <!-- Whiskers - white on orange fur -->
+      <path d="M 38 66 Q 28 65 18 62" stroke="#fff" stroke-width="0.7" fill="none" opacity="0.85" />
+      <path d="M 38 69 Q 28 70 16 70" stroke="#fff" stroke-width="0.7" fill="none" opacity="0.85" />
+      <path d="M 38 72 Q 28 74 18 78" stroke="#fff" stroke-width="0.7" fill="none" opacity="0.85" />
+      <path d="M 78 66 Q 88 65 98 62" stroke="#fff" stroke-width="0.7" fill="none" opacity="0.85" />
+      <path d="M 78 69 Q 88 70 100 70" stroke="#fff" stroke-width="0.7" fill="none" opacity="0.85" />
+      <path d="M 78 72 Q 88 74 98 78" stroke="#fff" stroke-width="0.7" fill="none" opacity="0.85" />
     </g>
   </symbol>
 </svg>
