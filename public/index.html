@@ -6,15 +6,24 @@
   <meta name="theme-color" content="#fceabb" />
   <title>Tug of Word</title>
   <link rel="icon" type="image/svg+xml" href="img/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700;9..144,900&family=Inter:wght@400;500;600;700;800&display=swap" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- Outer tabs (outside the inner game container) -->
-  <nav class="tabs" aria-label="Sections">
-    <button class="tab-btn active" data-tab="game">Game</button>
-    <button class="tab-btn" data-tab="how">How to Play</button>
-    <button class="tab-btn" data-tab="settings">Settings</button>
-  </nav>
+  <!-- Top app header: brand wordmark + section tabs -->
+  <header class="app-header">
+    <div class="app-brand">
+      <img class="brand-mark" src="img/favicon.svg" alt="" aria-hidden="true" />
+      <span class="brand-text">Tug of Word</span>
+    </div>
+    <nav class="tabs" aria-label="Sections">
+      <button class="tab-btn active" data-tab="game">Game</button>
+      <button class="tab-btn" data-tab="how">How to Play</button>
+      <button class="tab-btn" data-tab="settings">Settings</button>
+    </nav>
+  </header>
 
   <main>
     <!-- ============ GAME TAB ============ -->
