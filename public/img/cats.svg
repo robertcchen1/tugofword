@@ -16,14 +16,14 @@
 
   <!-- ============ BLACK CAT (PNG) ============ -->
   <symbol id="cat-black" viewBox="0 0 120 160">
-    <image href="cat-black.png" x="-10" y="0" width="140" height="160"
+    <image href="img/cat-black.png" x="-10" y="0" width="140" height="160"
            preserveAspectRatio="xMidYMid meet" />
   </symbol>
 
   <!-- ============ ORANGE CAT (PNG, mirrored so it faces left toward rope) ============ -->
   <symbol id="cat-orange" viewBox="0 0 120 160">
     <g transform="translate(120 0) scale(-1 1)">
-      <image href="cat-orange.png" x="-10" y="0" width="140" height="160"
+      <image href="img/cat-orange.png" x="-10" y="0" width="140" height="160"
              preserveAspectRatio="xMidYMid meet" />
     </g>
   </symbol>
