@@ -104,20 +104,25 @@
                  The .pit-rim, .pit, .pit-inner ellipses are all scaled by
                  app.js based on the dynamic pitHalfWidth. Order back-to-front:
                  rim (brown soil), main pit (radial dark gradient), inner
-                 darkening (true black), then grass tufts around the rim. -->
-            <ellipse class="pit-rim"   cx="500" cy="240" rx="48" ry="26" fill="#5a3c1e" />
-            <ellipse class="pit-rim-2" cx="500" cy="240" rx="44" ry="23" fill="#3e2611" />
-            <ellipse class="pit"       cx="500" cy="240" rx="40" ry="22" fill="url(#pit-grad)" />
-            <ellipse class="pit-inner" cx="500" cy="240" rx="32" ry="14" fill="#000" opacity="0.55" />
-            <!-- Subtle rim highlight on the top edge -->
-            <path class="pit-highlight" d="M 460 226 Q 500 220 540 226"
-                  stroke="#7a5224" stroke-width="1.2" fill="none" opacity="0.7" />
-            <!-- Grass tufts scattered around the rim (decorative) -->
-            <g class="pit-tufts" opacity="0.9">
-              <path d="M 452 232 L 451 228 L 454 230 L 456 226 L 458 230 L 460 228 Z" fill="#4f6d30" />
-              <path d="M 540 232 L 541 228 L 538 230 L 536 226 L 534 230 L 532 228 Z" fill="#4f6d30" />
-              <path d="M 478 252 L 477 248 L 480 250 L 482 246 L 484 250 Z" fill="#4f6d30" />
-              <path d="M 516 252 L 517 248 L 514 250 L 512 246 L 510 250 Z" fill="#4f6d30" />
+                 darkening (true black), then grass tufts around the rim.
+                 Wrapped in a group translated down 16 units so the outer
+                 rim's top edge (cy 240 − ry 26 = 214, then +16 = 230) sits
+                 exactly on the ground line (y = 230). -->
+            <g transform="translate(0 16)">
+              <ellipse class="pit-rim"   cx="500" cy="240" rx="48" ry="26" fill="#5a3c1e" />
+              <ellipse class="pit-rim-2" cx="500" cy="240" rx="44" ry="23" fill="#3e2611" />
+              <ellipse class="pit"       cx="500" cy="240" rx="40" ry="22" fill="url(#pit-grad)" />
+              <ellipse class="pit-inner" cx="500" cy="240" rx="32" ry="14" fill="#000" opacity="0.55" />
+              <!-- Subtle rim highlight on the top edge -->
+              <path class="pit-highlight" d="M 460 226 Q 500 220 540 226"
+                    stroke="#7a5224" stroke-width="1.2" fill="none" opacity="0.7" />
+              <!-- Grass tufts scattered around the rim (decorative) -->
+              <g class="pit-tufts" opacity="0.9">
+                <path d="M 452 232 L 451 228 L 454 230 L 456 226 L 458 230 L 460 228 Z" fill="#4f6d30" />
+                <path d="M 540 232 L 541 228 L 538 230 L 536 226 L 534 230 L 532 228 Z" fill="#4f6d30" />
+                <path d="M 478 252 L 477 248 L 480 250 L 482 246 L 484 250 Z" fill="#4f6d30" />
+                <path d="M 516 252 L 517 248 L 514 250 L 512 246 L 510 250 Z" fill="#4f6d30" />
+              </g>
             </g>
 
             <!-- ===== ROPE (multi-strand vector braid) =====
