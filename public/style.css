@@ -504,18 +504,43 @@ body.sudden-death .pit {
 .feedback.negative { color: var(--negative); }
 .feedback.error    { color: var(--negative); }
 
-.history {
+/* Two-column move history (one per player).
+   Right-column pulls are sign-flipped in JS so positive = "good move
+   from that player's perspective" in both columns. */
+.history-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 12px;
+}
+.history-col {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.history-head {
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 6px;
+  padding: 0 4px;
+}
+.history-left  .history-head { text-align: left; }
+.history-right .history-head { text-align: right; }
+.history-col ul {
   list-style: none;
   padding: 0;
-  margin: 10px 0 0;
+  margin: 0;
   display: flex;
   flex-direction: column;
   gap: 6px;
   font-size: 0.92rem;
-  max-height: 200px;
+  max-height: 220px;
   overflow-y: auto;
 }
-.history li {
+.history-col li {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -526,10 +551,18 @@ body.sudden-death .pit {
   border: 1px solid rgba(212, 196, 160, 0.6);
   box-shadow: var(--shadow-soft);
 }
-.history li.player { border-left: 4px solid #2a2520; }
-.history li.ai     { border-left: 4px solid #d96c2c; }
-.history .pull-pos { color: var(--positive); font-weight: 700; font-variant-numeric: tabular-nums; }
-.history .pull-neg { color: var(--negative); font-weight: 700; font-variant-numeric: tabular-nums; }
+.history-col li.player { border-left: 4px solid #2a2520; }
+.history-col li.ai     { border-right: 4px solid #d96c2c; border-left: none; }
+.history-right li { flex-direction: row-reverse; }   /* mirror layout so pull-number sits on the inside */
+.history-col .hist-word { font-weight: 600; }
+.history-col .hist-pull { font-weight: 700; font-variant-numeric: tabular-nums; }
+.history-col .pull-pos  { color: var(--positive); }
+.history-col .pull-neg  { color: var(--negative); }
+
+@media (max-width: 480px) {
+  .history-cols { grid-template-columns: 1fr; }
+  .history-col ul { max-height: 140px; }
+}
 
 /* =========================================================
    Settings / How prose

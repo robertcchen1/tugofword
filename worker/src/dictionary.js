@@ -62,21 +62,19 @@ export async function isRealWord(word) {
       `https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(w)}`,
       { signal: AbortSignal.timeout(2500) }
     );
-    if (r.ok) { cache.set(w, true); return true; }
-    // 404 fallback: dictionaryapi.dev misses many proper nouns, technical
-    // terms, and less-common words ("monday", "october", etc.). Accept
-    // any word-shaped string (already validated /^[a-z]+$/, 3-15 letters)
-    // — the stem-collision check still prevents the main exploit. The
-    // worst case is the player gets credit for a non-word; the scoring
-    // model will give it a meaningful or junk embedding either way.
-    if (r.status === 404 && w.length >= 3 && w.length <= 15) {
-      cache.set(w, true);
-      return true;
-    }
-    cache.set(w, false);
-    return false;
+    // Trust the dictionary API as authoritative.
+    //   200 ok → real word
+    //   404    → not a recognised word, reject
+    // The proper-noun gap (monday, october, etc.) is already handled by
+    // the COMMON_WORDS allowlist at the top of this function, so we
+    // don't need a permissive 404 fallback that would also let "asdf"
+    // through.
+    const ok = r.ok;
+    cache.set(w, ok);
+    return ok;
   } catch {
     // Network/timeout: be permissive rather than block the game.
+    // (Don't cache — let the next request try the API again.)
     return true;
   }
 }

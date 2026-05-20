@@ -170,22 +170,25 @@ function renderState(s) {
 }
 
 function renderMove(who, word, pull) {
-  const list = document.getElementById("history");
+  // Left column = player/p1 (positive global pull = good for them).
+  // Right column = ai/p2 (positive global pull = good for the LEFT player, so
+  //                       we flip the sign for display — positive then means
+  //                       "good move from this opponent's perspective").
+  const isLeft = (who === "player" || who === "p1");
+  const list = document.getElementById(isLeft ? "history-left" : "history-right");
+  const displayPull = isLeft ? pull : -pull;
   const li = document.createElement("li");
-  // Map role to CSS class (left side = "player" styling, right side = "ai" styling).
-  const sideClass = (who === "player" || who === "p1") ? "player"
-                  : (who === "ai"     || who === "p2") ? "ai"
-                  : who;
-  li.className = sideClass;
-  const pullCls = pull > 0 ? "pull-pos" : "pull-neg";
-  const sign    = pull > 0 ? "+" : "";
-  const label   = ({
-    "player": "You", "ai": "AI",
-    "p1": "P1",      "p2": "P2"
-  })[who] || who;
-  li.innerHTML = `<span><strong>${label}:</strong> ${escapeHtml(word)}</span>
-                  <span class="${pullCls}">${sign}${pull.toFixed(3)}</span>`;
+  li.className = isLeft ? "player" : "ai";
+  const pullCls = displayPull > 0 ? "pull-pos" : "pull-neg";
+  const sign    = displayPull >= 0 ? "+" : "";
+  li.innerHTML = `<span class="hist-word">${escapeHtml(word)}</span>
+                  <span class="hist-pull ${pullCls}">${sign}${displayPull.toFixed(3)}</span>`;
   list.prepend(li);
+}
+
+function updateHistoryHeads() {
+  document.getElementById("history-left-label").textContent  = (mode === "2p") ? "P1" : "You";
+  document.getElementById("history-right-label").textContent = (mode === "2p") ? "P2" : "AI";
 }
 
 function escapeHtml(s) {
@@ -225,7 +228,8 @@ async function newGame({ customPair } = {}) {
       ? { customPair }
       : { avoidPairs: loadSeen() };
     const s = await api("/api/new-game", body);
-    document.getElementById("history").innerHTML = "";
+    document.getElementById("history-left").innerHTML = "";
+    document.getElementById("history-right").innerHTML = "";
     document.getElementById("game-over").hidden = true;
     document.querySelector(".cat-black-pos").classList.remove("falling");
     document.querySelector(".cat-orange-pos").classList.remove("falling");
@@ -235,6 +239,7 @@ async function newGame({ customPair } = {}) {
     currentRole = "p1"; // 2P always starts with P1
     renderState(s);
     updateTurnIndicator();
+    updateHistoryHeads();
     rememberPair(s.playerTarget, s.aiTarget);
     setInputDisabled(false);
     document.getElementById("word-input").focus();
@@ -423,6 +428,7 @@ document.querySelectorAll('input[name="mode"]').forEach(radio => {
     setMode(radio.value);
     if (mode === "2p") currentRole = "p1";
     updateTurnIndicator();
+    updateHistoryHeads();
     toast(mode === "2p" ? "2-player mode — pass the keyboard each turn" : "Single-player vs AI");
   });
 });

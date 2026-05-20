@@ -172,7 +172,19 @@
 
         <div id="feedback" class="feedback" aria-live="polite"></div>
 
-        <ul id="history" class="history" aria-label="Move history"></ul>
+        <!-- Side-by-side per-player history. Pull values in the right
+             column are sign-flipped so "+" always means "good move
+             from that player's perspective". -->
+        <div class="history-cols">
+          <div class="history-col history-left">
+            <div class="history-head">🐈‍⬛ <span id="history-left-label">You</span></div>
+            <ul id="history-left" aria-label="Your moves"></ul>
+          </div>
+          <div class="history-col history-right">
+            <div class="history-head"><span id="history-right-label">AI</span> 🐈</div>
+            <ul id="history-right" aria-label="Opponent moves"></ul>
+          </div>
+        </div>
       </div>
     </section>
 
