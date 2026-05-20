@@ -191,6 +191,17 @@ function updateHistoryHeads() {
   document.getElementById("history-right-label").textContent = (mode === "2p") ? "P2" : "AI";
 }
 
+// Format a pull as a positive magnitude + the direction the rope moved.
+// Global pull sign: positive = toward the left (player / P1) side.
+// We always show the magnitude as "+N.NNN" so a player's good move never
+// looks like a negative score, and append "left" / "right" for direction.
+function formatPull(pull) {
+  const mag = Math.abs(pull).toFixed(3);
+  if (pull > 0.0005)  return `+${mag} left`;
+  if (pull < -0.0005) return `+${mag} right`;
+  return `+${mag} (no pull)`;
+}
+
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, c => ({
     "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
@@ -280,12 +291,16 @@ async function submitWord(word) {
     renderState(res.newGameState);
     renderMove(role, word, res.pull);
     pulseCats(res.pull);
-    res.pull > 0 ? playPositive() : playNegative();
+    // "Good" depends on which side the mover is on: left player wants a
+    // positive (leftward) pull, right player wants a negative (rightward) one.
+    const moverIsLeft  = (role === "player" || role === "p1");
+    const goodForMover = moverIsLeft ? res.pull > 0 : res.pull < 0;
+    goodForMover ? playPositive() : playNegative();
     const who = (mode === "2p")
       ? (role === "p1" ? "P1" : "P2")
       : "You";
-    feedback(`${who} pulled ${res.pull > 0 ? "+" : ""}${res.pull.toFixed(3)}`,
-             res.pull > 0 ? "positive" : "negative");
+    feedback(`${who} pulled ${formatPull(res.pull)}`,
+             goodForMover ? "positive" : "negative");
 
     if (res.gameOver) return endGame(res.winner);
 
@@ -306,9 +321,12 @@ async function submitWord(word) {
     renderState(aiRes.newGameState);
     renderMove("ai", aiRes.word, aiRes.pull);
     pulseCats(aiRes.pull);
-    aiRes.pull < 0 ? playPositive() : playNegative();
-    feedback(`AI played "${aiRes.word}" (${aiRes.pull > 0 ? "+" : ""}${aiRes.pull.toFixed(3)})`,
-             aiRes.pull < 0 ? "negative" : "positive");
+    // AI is the right-side player: a negative (rightward) pull is good for
+    // it — and bad for the human, so the human hears the negative chime.
+    const aiScored = aiRes.pull < 0;
+    aiScored ? playNegative() : playPositive();
+    feedback(`AI played "${aiRes.word}" — pulled ${formatPull(aiRes.pull)}`,
+             aiScored ? "negative" : "positive");
 
     if (aiRes.gameOver) return endGame(aiRes.winner);
 
