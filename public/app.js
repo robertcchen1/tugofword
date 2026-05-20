@@ -22,6 +22,33 @@ function setMode(m) {
   document.body.dataset.mode = mode;
 }
 
+// =========================================================
+// AI word prefetch buffer
+// The AI keeps up to 2 pre-generated words ready so its turn resolves
+// instantly. Each entry is { word, pull, stem } — pull is scored against
+// the (fixed-for-the-game) targets so it stays valid; the stem is
+// re-checked against playedStems when the word is actually submitted.
+// =========================================================
+const AI_BUFFER_TARGET = 2;
+let aiWordBuffer = [];      // [{ word, pull, stem }]
+let aiPrefetchInFlight = 0; // count of /api/ai-word requests currently running
+
+function refillAiBuffer() {
+  if (mode !== "ai") return;                 // 2-player mode never needs AI words
+  if (!state || state.gameOver) return;      // nothing to prefetch for
+  while (aiWordBuffer.length + aiPrefetchInFlight < AI_BUFFER_TARGET) {
+    aiPrefetchInFlight++;
+    api("/api/ai-word", { gameState: state })
+      .then(res => {
+        if (res && res.word) {
+          aiWordBuffer.push({ word: res.word, pull: res.pull, stem: res.stem });
+        }
+      })
+      .catch(() => { /* prefetch failure is non-fatal — the /api/ai-move fallback covers it */ })
+      .finally(() => { aiPrefetchInFlight--; });
+  }
+}
+
 function apiBase() {
   const saved = localStorage.getItem(API_KEY_STORAGE);
   if (saved) return saved;
@@ -248,12 +275,14 @@ async function newGame({ customPair } = {}) {
     document.querySelector(".cat-orange-wrap").classList.remove("cheering");
     document.getElementById("word-input").value = "";
     currentRole = "p1"; // 2P always starts with P1
+    aiWordBuffer = [];   // old buffer was scored against the previous targets
     renderState(s);
     updateTurnIndicator();
     updateHistoryHeads();
     rememberPair(s.playerTarget, s.aiTarget);
     setInputDisabled(false);
     document.getElementById("word-input").focus();
+    refillAiBuffer();    // start prefetching AI words for this game
   } catch (err) {
     feedback(err.message, "error");
     setInputDisabled(false);
@@ -264,6 +293,42 @@ function setInputDisabled(disabled) {
   document.getElementById("word-input").disabled  = disabled;
   document.getElementById("submit-btn").disabled  = disabled;
   document.getElementById("new-pair-btn").disabled = disabled;
+}
+
+// Resolve the AI's move. Tries buffered (pre-generated) words first — those
+// submit instantly because the server skips Gemini + embedding when given a
+// precomputedPull. Falls back to synchronous /api/ai-move if the buffer is
+// empty or every buffered word turns out to be stem-stale.
+// Returns { word, pull, newGameState, gameOver, winner }.
+async function getAiMove(gameState) {
+  while (aiWordBuffer.length > 0) {
+    const cand = aiWordBuffer.shift();
+    try {
+      const res = await api("/api/submit", {
+        word: cand.word,
+        gameState,
+        role: "ai",
+        precomputedPull: cand.pull
+      });
+      if (res.valid) {
+        return {
+          word: cand.word,
+          pull: res.pull,
+          newGameState: res.newGameState,
+          gameOver: res.gameOver,
+          winner: res.winner
+        };
+      }
+      // res.valid === false → the word's stem was played since it was
+      // buffered. Drop it and try the next buffered word.
+    } catch {
+      // Network error submitting the buffered word — bail to the
+      // synchronous fallback below.
+      break;
+    }
+  }
+  // Buffer empty / exhausted → generate synchronously.
+  return await api("/api/ai-move", { gameState });
 }
 
 async function submitWord(word) {
@@ -314,10 +379,10 @@ async function submitWord(word) {
       return;
     }
 
-    // AI mode — let Gemini take a turn
+    // AI mode — let the AI take a turn (instant if a buffered word is ready)
     await new Promise(r => setTimeout(r, 850));
     feedback("AI thinking…");
-    const aiRes = await api("/api/ai-move", { gameState: res.newGameState });
+    const aiRes = await getAiMove(res.newGameState);
     renderState(aiRes.newGameState);
     renderMove("ai", aiRes.word, aiRes.pull);
     pulseCats(aiRes.pull);
@@ -332,6 +397,7 @@ async function submitWord(word) {
 
     setInputDisabled(false);
     document.getElementById("word-input").focus();
+    refillAiBuffer(); // top the buffer back up for the next AI turn
   } catch (err) {
     feedback(err.message, "error");
     setInputDisabled(false);
@@ -447,6 +513,7 @@ document.querySelectorAll('input[name="mode"]').forEach(radio => {
     if (mode === "2p") currentRole = "p1";
     updateTurnIndicator();
     updateHistoryHeads();
+    refillAiBuffer(); // start prefetching if we just switched into AI mode
     toast(mode === "2p" ? "2-player mode — pass the keyboard each turn" : "Single-player vs AI");
   });
 });

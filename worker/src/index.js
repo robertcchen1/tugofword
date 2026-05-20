@@ -105,10 +105,18 @@ async function handleNewGame(body) {
 }
 
 async function handleSubmit(body, env) {
-  const { word, gameState, role = "player" } = body;
+  const { word, gameState, role = "player", precomputedPull } = body;
   if (!word || !gameState) return json({ error: "word and gameState required" }, 400);
-  // Accept the legacy "player" role plus "p1"/"p2" for 2-player mode.
-  const safeRole = ["player", "p1", "p2"].includes(role) ? role : "player";
+  // Accept the legacy "player" role plus "p1"/"p2" (2-player mode) and "ai"
+  // (used when the client submits a pre-generated AI word from its buffer).
+  const safeRole = ["player", "p1", "p2", "ai"].includes(role) ? role : "player";
+
+  // A precomputedPull is supplied only for AI-prefetched words: those were
+  // already generated + scored + real-word-checked at /api/ai-word time, so
+  // we trust the pull and skip the (slow) dictionary + embedding calls here.
+  // The stem-collision check below STILL runs, which catches the case where
+  // the human has since played a word sharing that stem.
+  const hasPrecomputed = typeof precomputedPull === "number" && isFinite(precomputedPull);
 
   const w = String(word).toLowerCase().trim();
 
@@ -119,11 +127,13 @@ async function handleSubmit(body, env) {
   if (gameState.playedStems.includes(wStem)) {
     return json({ valid: false, reason: "That stem has already been played." });
   }
-  if (!(await isRealWord(w))) {
+  if (!hasPrecomputed && !(await isRealWord(w))) {
     return json({ valid: false, reason: `"${w}" isn't a recognised word.` });
   }
 
-  const pull = await scorePull(w, gameState.playerTarget, gameState.aiTarget, env);
+  const pull = hasPrecomputed
+    ? Math.max(-1, Math.min(1, precomputedPull))
+    : await scorePull(w, gameState.playerTarget, gameState.aiTarget, env);
   const newGameState = applyMove(gameState, safeRole, w, pull);
 
   return json({
@@ -133,6 +143,18 @@ async function handleSubmit(body, env) {
     gameOver: !!newGameState.gameOver,
     winner: newGameState.winner
   });
+}
+
+// Prefetch endpoint: generate + score one AI word WITHOUT applying it to a
+// game state. The client buffers these so the AI's turn resolves instantly
+// (it then submits the word via /api/submit with role:"ai" + precomputedPull).
+async function handleAiWord(body, env) {
+  const { gameState } = body;
+  if (!gameState) return json({ error: "gameState required" }, 400);
+
+  const word = await generateAiMove(gameState, env);
+  const pull = await scorePull(word, gameState.playerTarget, gameState.aiTarget, env);
+  return json({ word, pull, stem: stem(word) });
 }
 
 async function handleAiMove(body, env) {
@@ -178,6 +200,7 @@ export default {
         case "/api/new-game": return await handleNewGame(body);
         case "/api/submit":   return await handleSubmit(body, env);
         case "/api/ai-move":  return await handleAiMove(body, env);
+        case "/api/ai-word":  return await handleAiWord(body, env);
         default:              return json({ error: "Not found" }, 404);
       }
     } catch (err) {
