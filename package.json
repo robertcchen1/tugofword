@@ -1,0 +1,15 @@
+{
+  "name": "tugofword",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Tug of Word — turn-based semantic word game (vanilla JS + Cloudflare Workers AI)",
+  "scripts": {
+    "dev": "wrangler dev --config worker/wrangler.toml",
+    "deploy:worker": "wrangler deploy --config worker/wrangler.toml",
+    "deploy:pages": "wrangler pages deploy public --project-name=tugofword",
+    "serve:web": "npx --yes serve public"
+  },
+  "devDependencies": {
+    "wrangler": "^3.80.0"
+  }
+}

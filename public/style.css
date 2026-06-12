@@ -1,0 +1,713 @@
+/* =========================================================
+   Tug of Word — styles
+   Cats on a rope above a widening pit.
+   ========================================================= */
+
+:root {
+  /* --- Surfaces --- */
+  --bg-day-top:    #f4ead2;   /* warm parchment */
+  --bg-day-bot:    #d9b88a;   /* aged paper */
+  --bg-dusk-top:   #c47a4a;
+  --bg-dusk-bot:   #6b3a52;
+  --ink:           #2a1f15;
+  --ink-soft:      #5c4a38;
+  --paper:         #fffaf0;
+  --paper-edge:    #d4c4a0;
+
+  /* --- Brand --- */
+  --accent:        #a8763a;
+  --accent-deep:   #5a3a18;
+  --accent-soft:   #e8d4a8;
+
+  /* --- Game-arena colors --- */
+  --grass:         #7fa356;
+  --grass-deep:    #4f6d30;
+  --pit:           #1a0d04;
+  --pit-inner:     #000;
+
+  /* --- Feedback --- */
+  --positive:      #2f7a55;
+  --negative:      #a83a3a;
+
+  /* --- Effects --- */
+  --shadow:        0 6px 24px -8px rgba(60, 35, 10, 0.25), 0 1px 2px rgba(60, 35, 10, 0.08);
+  --shadow-soft:   0 2px 6px rgba(60, 35, 10, 0.10);
+  --radius:        16px;
+  --radius-pill:   999px;
+  --arena-shift:   55px; /* how far each cat can lean. Keep small so cats stay on screen. */
+
+  /* Legacy aliases kept for any older selectors */
+  --bg-top:        var(--bg-day-top);
+  --bg-bot:        var(--bg-day-bot);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  color: var(--ink);
+  background: linear-gradient(180deg, var(--bg-day-top), var(--bg-day-bot) 85%);
+  min-height: 100dvh;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Display typography for the page title and section headings */
+.brand-text, h1, h2, .overlay-card h2 {
+  font-family: "Fraunces", Georgia, serif;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+body.sudden-death {
+  background: linear-gradient(180deg, var(--bg-dusk-top), var(--bg-dusk-bot) 85%);
+  transition: background 2s ease-in-out;
+}
+
+/* =========================================================
+   App header (wordmark + tabs in one row)
+   ========================================================= */
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 14px 18px 8px;
+  flex-wrap: wrap;
+}
+.app-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.brand-mark {
+  width: 28px;
+  height: 28px;
+  display: block;
+}
+.brand-text {
+  font-size: 1.45rem;
+  color: var(--accent-deep);
+  line-height: 1;
+}
+
+/* =========================================================
+   Tabs (subtle, with underline indicator on active)
+   ========================================================= */
+.tabs {
+  display: flex;
+  gap: 2px;
+  background: rgba(255, 250, 240, 0.5);
+  border-radius: var(--radius-pill);
+  padding: 4px;
+  box-shadow: inset 0 1px 2px rgba(60, 35, 10, 0.06);
+}
+.tab-btn {
+  background: transparent;
+  border: 0;
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.92rem;
+  padding: 8px 16px;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  color: var(--ink-soft);
+  transition: color 0.18s, background 0.18s;
+  position: relative;
+}
+.tab-btn:hover { color: var(--accent-deep); }
+.tab-btn.active {
+  background: var(--paper);
+  color: var(--accent-deep);
+  box-shadow: 0 1px 3px rgba(60, 35, 10, 0.12);
+}
+
+/* =========================================================
+   Tab panes
+   ========================================================= */
+main { padding: 14px 12px env(safe-area-inset-bottom); }
+.tab { display: none; }
+.tab.active { display: block; }
+
+.game-container {
+  max-width: 920px;
+  margin: 0 auto;
+  background: var(--paper);
+  border: 1px solid var(--paper-edge);
+  border-radius: 18px;
+  box-shadow: var(--shadow), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  padding: 20px 22px 22px;
+  position: relative;
+}
+
+/* =========================================================
+   Game header (targets row)
+   ========================================================= */
+.game-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.targets {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 700;
+  font-size: 1.05rem;
+  flex-wrap: wrap;
+}
+.target {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: #fff;
+  padding: 7px 14px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--paper-edge);
+  box-shadow: var(--shadow-soft);
+}
+.target .target-word {
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.target.player { color: #1a1a1a; }
+.target.ai     { color: #c25c10; }
+.cat-emoji { font-size: 1.3rem; }
+.vs { opacity: 0.5; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.1em; }
+
+.icon-btn {
+  background: transparent;
+  color: var(--accent-deep);
+  border: 1px solid var(--accent);
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.88rem;
+  padding: 7px 14px;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s;
+}
+.icon-btn:hover { background: var(--accent); color: white; }
+.icon-btn:active { transform: translateY(1px); }
+.icon-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.secondary-btn {
+  background: transparent;
+  color: var(--accent-deep);
+  border: 1px solid var(--accent);
+  font: inherit;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s;
+}
+.secondary-btn:hover { background: var(--accent-soft); }
+
+/* =========================================================
+   Instructions blurb (above arena on Game tab)
+   ========================================================= */
+.instructions {
+  font-size: 0.92rem;
+  color: var(--accent-deep);
+  opacity: 0.85;
+  text-align: center;
+  max-width: 620px;
+  margin: 4px auto 10px;
+  line-height: 1.4;
+}
+.instructions strong { color: var(--ink); }
+
+/* =========================================================
+   Turn indicator (2-player mode)
+   ========================================================= */
+.turn-indicator {
+  text-align: center;
+  font-weight: 800;
+  font-size: 1.05rem;
+  padding: 8px 14px;
+  border-radius: 999px;
+  margin: 2px auto 10px;
+  width: max-content;
+  background: var(--paper);
+  border: 2px solid var(--paper-edge);
+  box-shadow: var(--shadow);
+  animation: turn-pulse 1.6s ease-in-out infinite;
+}
+.turn-indicator[hidden] { display: none; }
+.turn-indicator.p1-turn { color: #1a1a1a; border-color: #555; }
+.turn-indicator.p2-turn { color: #c25c10; border-color: #e89060; }
+@keyframes turn-pulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.04); }
+}
+
+/* =========================================================
+   Game-tab controls row (mode toggle + new-pair button)
+   ========================================================= */
+.game-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+/* Pill-style segmented mode toggle */
+.mode-toggle {
+  display: inline-flex;
+  background: rgba(168, 118, 58, 0.08);
+  border-radius: var(--radius-pill);
+  padding: 3px;
+  border: 1px solid rgba(168, 118, 58, 0.18);
+}
+.mode-pill {
+  position: relative;
+  cursor: pointer;
+}
+.mode-pill input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.mode-pill span {
+  display: block;
+  padding: 6px 14px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  border-radius: var(--radius-pill);
+  transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+  user-select: none;
+}
+.mode-pill:hover span { color: var(--accent-deep); }
+.mode-pill input[type="radio"]:checked + span {
+  background: var(--paper);
+  color: var(--accent-deep);
+  box-shadow: 0 1px 3px rgba(60, 35, 10, 0.18);
+}
+.mode-pill input[type="radio"]:focus-visible + span {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* =========================================================
+   Arena (SVG)
+   ========================================================= */
+.arena {
+  width: 100%;
+  aspect-ratio: 1000 / 320;
+  background: linear-gradient(180deg, transparent 60%, rgba(0,0,0,0.06));
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin: 10px 0 14px;
+}
+.arena-svg { width: 100%; height: 100%; display: block; }
+
+.ground { fill: url(#grass-grad); }
+
+/* ===== Pit (multi-layer vector ellipses) ===== */
+.pit-rim, .pit-rim-2, .pit, .pit-inner {
+  transition: rx 1.5s ease-in-out, ry 1.5s ease-in-out;
+}
+.pit-highlight, .pit-tufts {
+  transition: opacity 0.4s;
+}
+.pit {
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.45));
+}
+body.sudden-death .pit {
+  animation: pit-pulse 2s ease-in-out infinite alternate;
+}
+@keyframes pit-pulse {
+  from { filter: drop-shadow(0 0 8px rgba(220, 80, 40, 0.35)) drop-shadow(0 2px 6px rgba(0,0,0,0.45)); }
+  to   { filter: drop-shadow(0 0 20px rgba(220, 80, 40, 0.7))  drop-shadow(0 2px 6px rgba(0,0,0,0.45)); }
+}
+
+/* ===== Rope (multi-strand vector braid) ===== */
+.rope-back {
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.25));
+}
+.rope-knot {
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.3));
+}
+/* Imbalance readout (centered above the pit) */
+.imbalance {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-weight: 800;
+  font-size: 32px;
+  fill: var(--accent-deep);
+  transition: fill 300ms;
+}
+.imbalance.positive { fill: var(--positive); }
+.imbalance.negative { fill: var(--negative); }
+.imbalance-label {
+  font-family: ui-rounded, "Nunito", system-ui, sans-serif;
+  font-size: 11px;
+  fill: var(--accent-deep);
+  opacity: 0.55;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.rope-knot { fill: var(--accent-deep); }
+
+/* The whole rope group slides with the cats (transform set by JS on the
+   rope-wrap <g> in viewBox units, matching .cat-pos). */
+.rope-wrap {
+  transition: transform 700ms cubic-bezier(.34,1.2,.64,1);
+}
+
+/* Cat positioning: outer .cat-pos has SVG transform attribute (viewBox units,
+   set by JS); inner .cat-wrap has CSS animations only. No coordinate-system
+   confusion between the two.
+   transform-box: fill-box is essential on BOTH — without it CSS rotates
+   around the SVG viewport (0,0), swinging the cat off-screen instead of
+   tumbling in place. */
+.cat-pos {
+  transition: transform 700ms cubic-bezier(.34,1.2,.64,1);
+  transform-origin: center;
+  transform-box: fill-box;
+}
+.cat-wrap {
+  transform-origin: center;
+  transform-box: fill-box;
+}
+
+/* Idle tug wobble — small rotate/Y, no x-translation (cat-pos handles that) */
+@keyframes tug-idle-left {
+  0%, 100% { transform: rotate(-1.5deg) translateY(-1px); }
+  50%      { transform: rotate( 1.5deg) translateY( 1px); }
+}
+@keyframes tug-idle-right {
+  0%, 100% { transform: rotate( 1.5deg) translateY( 1px); }
+  50%      { transform: rotate(-1.5deg) translateY(-1px); }
+}
+.cat-black-wrap   { animation: tug-idle-left  2.4s ease-in-out infinite; }
+.cat-orange-wrap  { animation: tug-idle-right 2.4s ease-in-out infinite; animation-delay: -1.2s; }
+
+/* Pull reactions */
+.cat-wrap.pulled  { animation: shudder 0.6s ease-out; }
+.cat-wrap.bracing { animation: brace   0.6s ease-out; }
+@keyframes shudder {
+  0%   { transform: scale(1); filter: brightness(1); }
+  30%  { transform: scale(0.93) translateY(3px); filter: brightness(0.85); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+@keyframes brace {
+  0%   { transform: scale(1); filter: brightness(1); }
+  30%  { transform: scale(1.06) rotate(-4deg) translateY(-2px); filter: brightness(1.1); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+
+/* Falling — applied to cat-pos. Uses CSS translate/rotate/scale (Transforms
+   Level 2) which COMPOSE with the SVG transform attribute on the same
+   element. The cat starts at its current (pit-edge) position, tips toward
+   the pit (anticipation), then drops down into the hole, shrinking and
+   fading as it disappears into the depth. Stays mostly vertical — no
+   wild spinning, no flying off to the side. */
+.cat-black-pos.falling  { animation: fall-in-black  1.0s cubic-bezier(.5,.1,.7,1) forwards; }
+.cat-orange-pos.falling { animation: fall-in-orange 1.0s cubic-bezier(.5,.1,.7,1) forwards; }
+@keyframes fall-in-black {
+  0%   { translate: 0 0;     rotate: 0deg;   scale: 1;   opacity: 1; }
+  15%  { translate: 4px -2px; rotate: 12deg;  scale: 1;   opacity: 1; }   /* tip toward pit */
+  50%  { translate: 14px 22px; rotate: 60deg; scale: 0.75; opacity: 1; }  /* dropping in */
+  100% { translate: 22px 55px; rotate: 120deg; scale: 0.18; opacity: 0; } /* gone */
+}
+@keyframes fall-in-orange {
+  0%   { translate: 0 0;       rotate: 0deg;    scale: 1;   opacity: 1; }
+  15%  { translate: -4px -2px; rotate: -12deg;  scale: 1;   opacity: 1; }
+  50%  { translate: -14px 22px; rotate: -60deg; scale: 0.75; opacity: 1; }
+  100% { translate: -22px 55px; rotate: -120deg; scale: 0.18; opacity: 0; }
+}
+.cat-wrap.cheering { animation: cheer 0.8s ease-out 3; }
+@keyframes cheer {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.18) translateY(-8px); }
+}
+
+/* =========================================================
+   Round info / input / feedback
+   ========================================================= */
+.round-info {
+  text-align: center;
+  font-weight: 700;
+  color: var(--accent-deep);
+  margin: 6px 0 10px;
+  font-size: 1.05rem;
+}
+#sudden-death-badge {
+  color: var(--negative);
+  margin-left: 6px;
+  animation: pulse 1.4s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.5; }
+}
+
+#submit-form {
+  display: flex;
+  gap: 10px;
+  margin: 8px 0;
+}
+#word-input {
+  flex: 1;
+  font: inherit;
+  font-size: 1.05rem;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1.5px solid var(--paper-edge);
+  background: #fff;
+  outline: none;
+  min-width: 0;
+  transition: border-color 0.18s, box-shadow 0.18s;
+}
+#word-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(168, 118, 58, 0.15);
+}
+#word-input::placeholder { color: var(--ink-soft); opacity: 0.5; }
+#submit-btn {
+  background: var(--accent);
+  color: white;
+  border: 0;
+  font: inherit;
+  font-weight: 700;
+  padding: 0 24px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 1rem;
+  letter-spacing: 0.02em;
+  box-shadow: var(--shadow-soft);
+  transition: background 0.18s, transform 0.08s;
+}
+#submit-btn:hover { background: var(--accent-deep); }
+#submit-btn:active { transform: translateY(1px); }
+#submit-btn:disabled { opacity: 0.55; cursor: wait; }
+
+.feedback {
+  min-height: 1.2em;
+  text-align: center;
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin: 4px 0;
+}
+.feedback.positive { color: var(--positive); }
+.feedback.negative { color: var(--negative); }
+.feedback.error    { color: var(--negative); }
+
+/* Two-column move history (one per player).
+   Right-column pulls are sign-flipped in JS so positive = "good move
+   from that player's perspective" in both columns. */
+.history-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 12px;
+}
+.history-col {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.history-head {
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 6px;
+  padding: 0 4px;
+}
+.history-left  .history-head { text-align: left; }
+.history-right .history-head { text-align: right; }
+.history-col ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.92rem;
+  max-height: 220px;
+  overflow-y: auto;
+}
+.history-col li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: #fff;
+  border: 1px solid rgba(212, 196, 160, 0.6);
+  box-shadow: var(--shadow-soft);
+}
+.history-col li.player { border-left: 4px solid #2a2520; }
+.history-col li.ai     { border-right: 4px solid #d96c2c; border-left: none; }
+.history-right li { flex-direction: row-reverse; }   /* mirror layout so pull-number sits on the inside */
+.history-col .hist-word { font-weight: 600; }
+.history-col .hist-pull { font-weight: 700; font-variant-numeric: tabular-nums; }
+.history-col .pull-pos  { color: var(--positive); }
+.history-col .pull-neg  { color: var(--negative); }
+
+@media (max-width: 480px) {
+  .history-cols { grid-template-columns: 1fr; }
+  .history-col ul { max-height: 140px; }
+}
+
+/* =========================================================
+   Settings / How prose
+   ========================================================= */
+.prose { line-height: 1.55; }
+.prose h2 { margin-top: 0; color: var(--accent-deep); }
+.prose h3 { color: var(--accent-deep); margin-bottom: 4px; }
+.prose code {
+  background: rgba(0,0,0,0.06);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 0.92em;
+}
+#custom-pair-form, #api-endpoint-form {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 10px 0 16px;
+}
+#custom-pair-form input, #api-endpoint-form input {
+  flex: 1;
+  min-width: 140px;
+  font: inherit;
+  font-size: 1rem;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  border: 2px solid var(--paper-edge);
+  background: #fff;
+}
+#custom-pair-form button, #api-endpoint-form button {
+  background: var(--accent);
+  color: white;
+  border: 0;
+  font: inherit;
+  font-weight: 700;
+  padding: 0 18px;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+/* =========================================================
+   Overlay (game over)
+   ========================================================= */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(40, 25, 10, 0.5);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 20px;
+  animation: fade-in 0.25s ease-out;
+}
+.overlay[hidden] { display: none; }
+.toast[hidden]   { display: none; }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+.overlay-card {
+  background: var(--paper);
+  border-radius: 20px;
+  padding: 28px 32px;
+  max-width: 440px;
+  text-align: center;
+  box-shadow: 0 24px 72px rgba(40, 25, 10, 0.4), inset 0 1px 0 rgba(255,255,255,0.6);
+  animation: slide-up 0.3s cubic-bezier(.2,.8,.4,1.0);
+}
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.overlay-card h2 { margin-top: 0; font-size: 1.85rem; color: var(--accent-deep); }
+.overlay-card p  { color: var(--ink-soft); line-height: 1.5; }
+.overlay-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+.overlay-actions button {
+  background: var(--accent);
+  color: white;
+  border: 0;
+  font: inherit;
+  font-weight: 600;
+  padding: 11px 20px;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: background 0.18s;
+}
+.overlay-actions button:hover { background: var(--accent-deep); }
+.overlay-actions button + button {
+  background: transparent;
+  color: var(--accent-deep);
+  border: 1px solid var(--accent);
+}
+.overlay-actions button + button:hover { background: var(--accent-soft); color: var(--accent-deep); }
+
+/* =========================================================
+   Toast
+   ========================================================= */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(20px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  background: var(--ink);
+  color: var(--paper);
+  padding: 10px 18px;
+  border-radius: 999px;
+  box-shadow: var(--shadow);
+  z-index: 200;
+  animation: toast-in 0.3s ease-out;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+@keyframes toast-in {
+  from { opacity: 0; transform: translate(-50%, 10px); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
+}
+
+/* =========================================================
+   Mobile
+   ========================================================= */
+@media (max-width: 600px) {
+  .tabs { padding: 8px 8px 0; }
+  .tab-btn { padding: 8px 12px; font-size: 0.9rem; }
+  .game-container { padding: 12px 12px 16px; border-radius: 12px; }
+  .targets { font-size: 0.95rem; }
+  .target { padding: 4px 10px; }
+  #word-input { font-size: 16px; /* prevent iOS zoom */ }
+  :root { --arena-shift: 6vw; }
+  .history { max-height: 140px; }
+  .instructions { font-size: 0.85rem; }
+}
+@media (max-width: 380px) {
+  .instructions { display: none; } /* save vertical room on tiny screens */
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .cat-black-wrap, .cat-orange-wrap { animation: none; }
+  .cat-wrap.pulled, .cat-wrap.bracing, .cat-wrap.cheering { animation: none; }
+  .cat-wrap, .rope-knot, .pit, .pit-inner { transition-duration: 200ms; }
+  body.sudden-death { transition: none; }
+}

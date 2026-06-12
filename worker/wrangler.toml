@@ -1,0 +1,17 @@
+name = "tugofword-api"
+main = "src/index.js"
+compatibility_date = "2026-05-17"
+
+# Secrets (set via `wrangler secret put GOOGLE_AI_KEY` for prod, or in
+# worker/.dev.vars for local development):
+#   GOOGLE_AI_KEY — Google AI Studio API key (free tier, 1,500 req/day)
+#                   https://aistudio.google.com/apikey
+
+# Future multiplayer support (uncomment when adding 2-player rooms):
+# [[durable_objects.bindings]]
+# name = "GAME_ROOM"
+# class_name = "GameRoom"
+#
+# [[migrations]]
+# tag = "v1"
+# new_classes = ["GameRoom"]

@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#fceabb" />
+  <title>Tug of Word</title>
+  <link rel="icon" type="image/svg+xml" href="img/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700;9..144,900&family=Inter:wght@400;500;600;700;800&display=swap" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Top app header: brand wordmark + section tabs -->
+  <header class="app-header">
+    <div class="app-brand">
+      <img class="brand-mark" src="img/favicon.svg" alt="" aria-hidden="true" />
+      <span class="brand-text">Tug of Word</span>
+    </div>
+    <nav class="tabs" aria-label="Sections">
+      <button class="tab-btn active" data-tab="game">Game</button>
+      <button class="tab-btn" data-tab="how">How to Play</button>
+      <button class="tab-btn" data-tab="settings">Settings</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- ============ GAME TAB ============ -->
+    <section id="tab-game" class="tab active">
+      <div class="game-container">
+        <!-- Compact mode + new-pair controls above the targets row -->
+        <div class="game-controls">
+          <form id="mode-form" class="mode-toggle" aria-label="Game mode">
+            <label class="mode-pill">
+              <input type="radio" name="mode" value="ai" checked />
+              <span>vs AI</span>
+            </label>
+            <label class="mode-pill">
+              <input type="radio" name="mode" value="2p" />
+              <span>2 Players</span>
+            </label>
+          </form>
+          <button id="new-pair-btn" class="icon-btn" title="New target pair">↻ New pair</button>
+        </div>
+
+        <header class="game-header">
+          <div class="targets">
+            <span class="target player">
+              <span class="cat-emoji">🐈‍⬛</span>
+              <span class="target-word" id="player-target">…</span>
+            </span>
+            <span class="vs">vs</span>
+            <span class="target ai">
+              <span class="target-word" id="ai-target">…</span>
+              <span class="cat-emoji">🐈</span>
+            </span>
+          </div>
+        </header>
+
+        <p class="instructions">
+          Type a word that's <strong>close in meaning to your target</strong> but
+          <strong>far from your opponent's</strong>. Pull the rope until the other cat falls in!
+        </p>
+
+        <!-- Turn indicator (hidden in vs-AI mode, shown in 2-player mode) -->
+        <div id="turn-indicator" class="turn-indicator" hidden></div>
+
+        <!-- Arena: cats on a rope above a pit -->
+        <div class="arena" id="arena" style="--rope-pos: 0;">
+          <svg class="arena-svg" viewBox="0 0 1000 320" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+            <!-- ===== SVG defs (gradients used below) ===== -->
+            <defs>
+              <!-- Grass gradient: lighter at horizon, deeper toward foreground -->
+              <linearGradient id="grass-grad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%"   stop-color="#8fb963" />
+                <stop offset="100%" stop-color="#5d8240" />
+              </linearGradient>
+              <!-- Pit interior: bright rim → dark middle → true black center -->
+              <radialGradient id="pit-grad" cx="0.5" cy="0.5" r="0.55">
+                <stop offset="0%"   stop-color="#000000" />
+                <stop offset="55%"  stop-color="#0a0604" />
+                <stop offset="88%"  stop-color="#2a1a0d" />
+                <stop offset="100%" stop-color="#4a3018" />
+              </radialGradient>
+              <!-- Rope: warm honey down to deeper brown -->
+              <linearGradient id="rope-grad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%"   stop-color="#d1a06a" />
+                <stop offset="50%"  stop-color="#a8763a" />
+                <stop offset="100%" stop-color="#6b4818" />
+              </linearGradient>
+            </defs>
+
+            <!-- Ground / horizon -->
+            <rect class="ground" x="0" y="230" width="1000" height="90" fill="url(#grass-grad)" />
+
+            <!-- Imbalance readout (centered above pit) -->
+            <text class="imbalance" id="imbalance-text" x="500" y="50"
+                  text-anchor="middle" dominant-baseline="middle">0.000</text>
+            <text class="imbalance-label" x="500" y="78"
+                  text-anchor="middle" dominant-baseline="middle">rope position</text>
+
+            <!-- ===== PIT (multi-layer vector) =====
+                 The .pit-rim, .pit, .pit-inner ellipses are all scaled by
+                 app.js based on the dynamic pitHalfWidth. Order back-to-front:
+                 rim (brown soil), main pit (radial dark gradient), inner
+                 darkening (true black), then grass tufts around the rim.
+                 Wrapped in a group translated down 16 units so the outer
+                 rim's top edge (cy 240 − ry 26 = 214, then +16 = 230) sits
+                 exactly on the ground line (y = 230). -->
+            <g transform="translate(0 16)">
+              <ellipse class="pit-rim"   cx="500" cy="240" rx="48" ry="26" fill="#5a3c1e" />
+              <ellipse class="pit-rim-2" cx="500" cy="240" rx="44" ry="23" fill="#3e2611" />
+              <ellipse class="pit"       cx="500" cy="240" rx="40" ry="22" fill="url(#pit-grad)" />
+              <ellipse class="pit-inner" cx="500" cy="240" rx="32" ry="14" fill="#000" opacity="0.55" />
+              <!-- Subtle rim highlight on the top edge -->
+              <path class="pit-highlight" d="M 460 226 Q 500 220 540 226"
+                    stroke="#7a5224" stroke-width="1.2" fill="none" opacity="0.7" />
+              <!-- Grass tufts scattered around the rim (decorative) -->
+              <g class="pit-tufts" opacity="0.9">
+                <path d="M 452 232 L 451 228 L 454 230 L 456 226 L 458 230 L 460 228 Z" fill="#4f6d30" />
+                <path d="M 540 232 L 541 228 L 538 230 L 536 226 L 534 230 L 532 228 Z" fill="#4f6d30" />
+                <path d="M 478 252 L 477 248 L 480 250 L 482 246 L 484 250 Z" fill="#4f6d30" />
+                <path d="M 516 252 L 517 248 L 514 250 L 512 246 L 510 250 Z" fill="#4f6d30" />
+              </g>
+            </g>
+
+            <!-- ===== ROPE (multi-strand vector braid) =====
+                 Wrapped in .rope-wrap so it slides with the cats via JS
+                 transform attribute. Two main strands form the back of the
+                 braid; diagonal twist marks on top create the woven look;
+                 a thin highlight runs along the top edge. -->
+            <g class="rope-wrap" transform="translate(0 0)">
+              <!-- Dark back shadow strand for depth -->
+              <path class="rope-back" d="M 320 196 Q 500 214 680 196"
+                    stroke="#5a3a18" stroke-width="16" stroke-linecap="round" fill="none" />
+              <!-- Main rope body with gradient -->
+              <path class="rope-main" d="M 320 195 Q 500 213 680 195"
+                    stroke="url(#rope-grad)" stroke-width="14" stroke-linecap="round" fill="none" />
+              <!-- Diagonal twist marks (dashed pattern gives the braided look) -->
+              <path class="rope-twists" d="M 320 195 Q 500 213 680 195"
+                    stroke="#6b4818" stroke-width="13" stroke-linecap="butt" fill="none"
+                    stroke-dasharray="3 8" opacity="0.55" />
+              <!-- Bright highlight strand along the top edge for 3D feel -->
+              <path class="rope-highlight" d="M 320 191 Q 500 209 680 191"
+                    stroke="#e6c89a" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.7" />
+              <!-- Center knot -->
+              <circle class="rope-knot" cx="500" cy="204" r="9" fill="url(#rope-grad)" stroke="#5a3a18" stroke-width="1.2" />
+              <ellipse class="rope-knot-highlight" cx="498" cy="201" rx="3" ry="2" fill="#e6c89a" opacity="0.5" />
+            </g>
+
+            <!-- Cats — outer <g> for JS-set position (SVG transform attribute,
+                 in viewBox units), inner <g> for CSS animations (wobble, pull). -->
+            <g class="cat-pos cat-black-pos" transform="translate(0 0)">
+              <g class="cat-wrap cat-black-wrap">
+                <use class="cat cat-black" href="#cat-black" x="220" y="100" width="160" height="180" />
+              </g>
+            </g>
+            <g class="cat-pos cat-orange-pos" transform="translate(0 0)">
+              <g class="cat-wrap cat-orange-wrap">
+                <use class="cat cat-orange" href="#cat-orange" x="620" y="100" width="160" height="180" />
+              </g>
+            </g>
+          </svg>
+        </div>
+
+        <div class="round-info">
+          Round <span id="round">1</span>
+          <span id="sudden-death-badge" hidden>· Sudden Death!</span>
+        </div>
+
+        <form id="submit-form" autocomplete="off">
+          <input id="word-input" type="text" placeholder="Type anything..." autocomplete="off"
+                 autocorrect="off" autocapitalize="off" spellcheck="false" />
+          <button id="submit-btn" type="submit">Pull</button>
+        </form>
+
+        <div id="feedback" class="feedback" aria-live="polite"></div>
+
+        <!-- Side-by-side per-player history. Pull values in the right
+             column are sign-flipped so "+" always means "good move
+             from that player's perspective". -->
+        <div class="history-cols">
+          <div class="history-col history-left">
+            <div class="history-head">🐈‍⬛ <span id="history-left-label">You</span></div>
+            <ul id="history-left" aria-label="Your moves"></ul>
+          </div>
+          <div class="history-col history-right">
+            <div class="history-head"><span id="history-right-label">AI</span> 🐈</div>
+            <ul id="history-right" aria-label="Opponent moves"></ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ HOW TO PLAY TAB ============ -->
+    <section id="tab-how" class="tab">
+      <div class="game-container prose">
+        <h2>How to play</h2>
+        <p>
+          You and an AI cat compete in a semantic tug-of-war. Each round, you each
+          submit one word. The closer your word is in meaning to <em>your</em> target
+          (and the further from your opponent's), the harder you pull the rope to
+          your side.
+        </p>
+        <h3>Scoring</h3>
+        <p>
+          For every word, the server computes
+          <code>similarity(word, your_target) − similarity(word, opponent_target)</code>.
+          Positive scores pull the rope toward you; negative scores pull toward the AI.
+        </p>
+        <h3>Sudden Death</h3>
+        <p>
+          After round 5, the pit at the center starts to widen each round and
+          the win threshold shrinks fast. Most games are decided by round 7–10 —
+          don't let your cat fall in!
+        </p>
+        <h3>Rules</h3>
+        <ul>
+          <li>Real English words only.</li>
+          <li>No morphological duplicates — if "ocean" has been played, you can't play "oceans" or "oceanic".</li>
+          <li>Two cats. One pit. May the better word win.</li>
+        </ul>
+        <h3>2-player mode</h3>
+        <p>
+          Switch to <strong>2 players (local)</strong> in Settings to play head-to-head
+          on the same screen — pass the keyboard each turn. P1 controls the black cat,
+          P2 controls the orange one.
+        </p>
+      </div>
+    </section>
+
+    <!-- ============ SETTINGS TAB ============ -->
+    <section id="tab-settings" class="tab">
+      <div class="game-container prose">
+        <h2>Custom target pair</h2>
+        <p>Start a game with your own two target words.</p>
+        <form id="custom-pair-form">
+          <input id="custom-player" type="text" placeholder="Your target word" required />
+          <input id="custom-ai" type="text" placeholder="Opponent target word" required />
+          <button type="submit">Start with custom pair</button>
+        </form>
+
+        <h2>Pair history</h2>
+        <p>You've seen <span id="seen-count">0</span> of 100 pairs.</p>
+        <button id="reset-seen" class="secondary-btn">Reset seen-pair history</button>
+
+        <h2>API endpoint</h2>
+        <p>
+          By default the frontend calls the Worker on the same origin. If you're
+          serving the frontend separately (e.g. <code>npx serve public</code> on
+          :3000 while <code>wrangler dev</code> runs on :8787), set the endpoint:
+        </p>
+        <form id="api-endpoint-form">
+          <input id="api-endpoint" type="url" placeholder="http://localhost:8787" />
+          <button type="submit">Save</button>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <!-- Game-over overlay -->
+  <div id="game-over" class="overlay" hidden>
+    <div class="overlay-card">
+      <h2 id="game-over-title">…</h2>
+      <p id="game-over-subtitle">…</p>
+      <div class="overlay-actions">
+        <button id="play-again-btn">Play again (same pair)</button>
+        <button id="new-pair-after-btn">New pair</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="toast" hidden></div>
+
+  <!-- Cat SVG sprite sheet (loaded inline so <use href="#..."> works) -->
+  <div id="svg-sprites" aria-hidden="true"></div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

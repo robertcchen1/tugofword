@@ -2,9 +2,15 @@
 node_modules/
 npm-debug.log*
 
+# Wrangler local state
+.wrangler/
+worker/.wrangler/
+
 # Environment
 .env
 .env.local
+.dev.vars
+worker/.dev.vars
 
 # OS
 .DS_Store
